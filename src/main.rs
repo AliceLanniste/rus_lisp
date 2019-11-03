@@ -7,7 +7,7 @@ fn main() {
   
     let mut token = tokenize::Token::new();
     loop {
-        print!("lisp> ");
+        println!("lisp> ");
         let mut input_line = String::new();
         match io::stdin().read_line(&mut input_line) {
             Ok(bytes) => {
