@@ -1,15 +1,6 @@
 use std::fmt;
-use std::num::ParseFloatError;
 
-#[derive(Debug)]
-enum Symbol {
-   RightParen,
-   LeftParen,
-   Add,
-   Sub 
-}
 
-// type Result<T> = std::result::Result<T,SError>;
 
 #[derive(Debug)]
 enum SExp {
@@ -49,16 +40,19 @@ pub fn Tokenize(input: String) -> Vec<String> {
 
 
 
-fn parse_number(exp: String) -> SExp {
-
-    match exp.parse::<f64>() {
-        Ok(v) => SExp::Int(v),
-        Err(e) => SExp::Symbol(e.to_string()),
-    }
-
-
-    
+fn parse_number(exp: &str) -> SExp {
+        match exp.parse::<f64>() {
+            Ok(v) => SExp::Int(v),
+            Err(e) => SExp::Symbol(e.to_string()),
+        }
+   
 }
 
 
-
+fn parse_bool(expr:&str) -> SExp {
+    match expr {
+        "false" =>SExp::Bool(false),
+        "true" => SExp::Bool(true),
+        _  => unimplemented!(),
+    }
+}
