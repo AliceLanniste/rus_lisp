@@ -39,6 +39,15 @@ pub fn Tokenize(input: String) -> Vec<String> {
 }
 
 
+fn parse(tokens: &[String]) ->SExp {
+   let (first, elements) = tokens.split_first().expect("error");
+   match first.as_str() {
+      "(" => unimplemented!(),
+       ")" => unimplemented!(),
+       _ => parse_atom(first),
+   }
+}
+
 
 fn parse_number(exp: &str) -> SExp {
         match exp.parse::<f64>() {
@@ -49,10 +58,13 @@ fn parse_number(exp: &str) -> SExp {
 }
 
 
-fn parse_bool(expr:&str) -> SExp {
+fn parse_atom(expr:&str) -> SExp {
+    
     match expr {
         "false" =>SExp::Bool(false),
         "true" => SExp::Bool(true),
-        _  => unimplemented!(),
+        _  => parse_number(expr),
     }
 }
+
+
