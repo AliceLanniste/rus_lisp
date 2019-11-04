@@ -5,7 +5,7 @@ pub mod tokenize;
 
 fn main() {
   
-    let mut token = tokenize::Token::new();
+   
     loop {
         println!("lisp> ");
         let mut input_line = String::new();
@@ -13,7 +13,7 @@ fn main() {
             Ok(bytes) => {
                    if bytes > 0 {
                       
-                       token.parse_int(&input_line);
+                       
                    }else {
                       println!("input invalid!");
                       break;
