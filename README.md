@@ -1,0 +1,1 @@
+使用rust来实现lisp，目前打算支持`Number` `Bool`和`function`。
