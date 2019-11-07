@@ -116,9 +116,9 @@ fn parse_atom(expr:&str) -> SExp {
 pub fn eval(exp: &SExp)  {
 
    match exp {
-       SExp::Bool(b) => println!("bool is: {}", b),
-       SExp::Number(n) =>println!("number is: {}", n),
-       SExp::Symbol(_s) => unimplemented!(),
+       SExp::Bool(_) => println!("bool is: {}", exp.to_string().clone()),
+       SExp::Number(_n) =>println!("number is: {}", exp.to_string().clone()),
+       SExp::Symbol(_s) => println!("symbol is: {}", exp.to_string().clone()),
        SExp::List(list) => println!("list is {:?}", list),
    }
 }
