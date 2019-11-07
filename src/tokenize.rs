@@ -16,6 +16,10 @@ impl GlobalEnv {
     fn insert(&mut self,key:String,value:SExp) {
         self.Global.insert(key,value);
     }
+
+   pub fn get(&self, key:String) -> Result<SExp,&'static str> {
+        unimplemented!();
+    }
 }
 
 
@@ -28,10 +32,7 @@ pub enum SExp {
     List(Vec<SExp>),
 }
 
-#[derive(Debug)]
-enum SError {
-    Error(String),
-}
+
 
 
 impl fmt::Display for SExp {
@@ -63,26 +64,26 @@ pub fn Tokenize(input: String) -> Vec<String> {
 }
 
 
-pub fn parse(tokens: &[String]) ->Result<SExp> {
+pub fn parse(tokens: &[String])->Result<SExp,&'static str>  {
    let (first, elements) = tokens.split_first().expect("error");
    match first.as_str() {
       "(" => parse_seq(elements),
        ")" => Err("invalid"),
-       _ => parse_atom(first),
+       _ => Ok(parse_atom(first)),
    }
 }
 
-fn parse_seq(tokens:&[String]) -> SExp{
+fn parse_seq(tokens:&[String]) -> Result<SExp,&'static str>{
     let mut list = Vec::new();
     let mut t = tokens;
     loop {
-        let (first,rest) = t.split_first().expect("end");
+        let (first,rest) = t.split_first().ok_or("bad")?;
 
         if first == ")" {
-            return SExp::List(list)
+            return Ok(SExp::List(list))
         }
 
-       let exp =parse(first)?;
+       let exp =parse(t)?;
        list.push(exp);
        t = rest; 
     }
@@ -93,7 +94,7 @@ fn parse_seq(tokens:&[String]) -> SExp{
 fn parse_number(exp: &str) -> SExp {
         match exp.parse::<f64>() {
             Ok(v) => SExp::Number(v),
-            Err(e) => SExp::Symbol(e.to_string()),
+            Err(_) => SExp::Symbol(exp.to_string().clone()),
         }
    
 }
@@ -117,7 +118,7 @@ pub fn eval(exp: &SExp)  {
    match exp {
        SExp::Bool(b) => println!("bool is: {}", b),
        SExp::Number(n) =>println!("number is: {}", n),
-       SExp::Symbol(s) => unimplemented!(),
-       
+       SExp::Symbol(_s) => unimplemented!(),
+       SExp::List(list) => println!("list is {:?}", list),
    }
 }

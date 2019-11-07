@@ -16,12 +16,12 @@ fn slurp_expr() -> String {
   expr
 }
 
-fn main() {
+fn main() ->Result<(), &'static str>{
 //    let env =  &mut GlobalEnv::new();
   loop {
     println!("risp >");
     let expr = slurp_expr();
-    let exp = parse(&Tokenize(expr));
+    let exp = parse(&Tokenize(expr))?;
     eval(&exp)
   }
 }
