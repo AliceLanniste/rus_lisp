@@ -25,7 +25,7 @@ pub enum SExp {
     Number(f64),
     Bool(bool),
     Symbol(String),
-    // List(Vec<SExp>)
+    List(Vec<SExp>),
 }
 
 #[derive(Debug)]
@@ -41,7 +41,13 @@ impl fmt::Display for SExp {
             SExp::Bool(a) => a.to_string(),
             SExp::Number(f) => f.to_string(),
             SExp::Symbol(s) => s.clone(),
-            // SExp::List(list) => {}
+            SExp::List(list) => {
+           let xs: Vec<String> = list
+                  .iter()
+                  .map(|x| x.to_string())
+                  .collect();
+            format!("({})", xs.join(","))
+          },
         };
 
         write!(f,"{}", des)
@@ -57,15 +63,32 @@ pub fn Tokenize(input: String) -> Vec<String> {
 }
 
 
-pub fn parse(tokens: &[String]) ->SExp {
+pub fn parse(tokens: &[String]) ->Result<SExp> {
    let (first, elements) = tokens.split_first().expect("error");
    match first.as_str() {
-      "(" => unimplemented!(),
-       ")" => unimplemented!(),
+      "(" => parse_seq(elements),
+       ")" => Err("invalid"),
        _ => parse_atom(first),
    }
 }
 
+fn parse_seq(tokens:&[String]) -> SExp{
+    let mut list = Vec::new();
+    let mut t = tokens;
+    loop {
+        let (first,rest) = t.split_first().expect("end");
+
+        if first == ")" {
+            return SExp::List(list)
+        }
+
+       let exp =parse(first)?;
+       list.push(exp);
+       t = rest; 
+    }
+   
+    
+}
 
 fn parse_number(exp: &str) -> SExp {
         match exp.parse::<f64>() {
@@ -92,8 +115,8 @@ fn parse_atom(expr:&str) -> SExp {
 pub fn eval(exp: &SExp)  {
 
    match exp {
-       SExp::Bool(b) => println!("bool is: {}", exp),
-       SExp::Number(n) =>println!("number is: {}", exp),
+       SExp::Bool(b) => println!("bool is: {}", b),
+       SExp::Number(n) =>println!("number is: {}", n),
        SExp::Symbol(s) => unimplemented!(),
        
    }
