@@ -1,10 +1,28 @@
 use std::fmt;
+use std::collections::HashMap;
+
+#[derive(Debug)]
+pub struct GlobalEnv {
+   Global :HashMap<String,SExp>,
+}
+
+impl GlobalEnv {
+   pub fn new() -> Self {
+        Self{
+            Global: HashMap::new(),
+        }
+    }
+
+    fn insert(&mut self,key:String,value:SExp) {
+        self.Global.insert(key,value);
+    }
+}
 
 
 
 #[derive(Debug)]
-enum SExp {
-    Int(f64),
+pub enum SExp {
+    Number(f64),
     Bool(bool),
     Symbol(String),
     // List(Vec<SExp>)
@@ -19,9 +37,9 @@ enum SError {
 impl fmt::Display for SExp {
     
     fn fmt(&self,f:&mut fmt::Formatter<'_>) -> fmt::Result {
-       let des = match *self {
+       let des = match self {
             SExp::Bool(a) => a.to_string(),
-            SExp::Int(f) => f.to_string(),
+            SExp::Number(f) => f.to_string(),
             SExp::Symbol(s) => s.clone(),
             // SExp::List(list) => {}
         };
@@ -39,7 +57,7 @@ pub fn Tokenize(input: String) -> Vec<String> {
 }
 
 
-fn parse(tokens: &[String]) ->SExp {
+pub fn parse(tokens: &[String]) ->SExp {
    let (first, elements) = tokens.split_first().expect("error");
    match first.as_str() {
       "(" => unimplemented!(),
@@ -51,7 +69,7 @@ fn parse(tokens: &[String]) ->SExp {
 
 fn parse_number(exp: &str) -> SExp {
         match exp.parse::<f64>() {
-            Ok(v) => SExp::Int(v),
+            Ok(v) => SExp::Number(v),
             Err(e) => SExp::Symbol(e.to_string()),
         }
    
@@ -61,10 +79,22 @@ fn parse_number(exp: &str) -> SExp {
 fn parse_atom(expr:&str) -> SExp {
     
     match expr {
-        "false" =>SExp::Bool(false),
-        "true" => SExp::Bool(true),
+        "#f" =>SExp::Bool(false),
+        "#t" => SExp::Bool(true),
         _  => parse_number(expr),
     }
 }
 
 
+
+
+
+pub fn eval(exp: &SExp)  {
+
+   match exp {
+       SExp::Bool(b) => println!("bool is: {}", exp),
+       SExp::Number(n) =>println!("number is: {}", exp),
+       SExp::Symbol(s) => unimplemented!(),
+       
+   }
+}
