@@ -1,37 +1,48 @@
+use std::rc::Rc;
 use std::fmt;
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct GlobalEnv {
-   Global :HashMap<String,SExp>,
+pub struct GlobalEnv<'a> {
+   Global :HashMap<&'a str,&'a [SExp]>,
 }
 
-impl GlobalEnv {
+impl GlobalEnv<'_> {
    pub fn new() -> Self {
         Self{
             Global: HashMap::new(),
         }
     }
 
-    fn insert(&mut self,key:String,value:SExp) {
+    fn insert(&mut self,key:&'static str,value:&'static [SExp]) {
         self.Global.insert(key,value);
     }
 
-   pub fn get(&self, key:String) -> Result<SExp,&'static str> {
-        unimplemented!();
-    }
+//    pub fn get(&self, key:&'a str) -> Result<SExp,&'static str> {
+//         self.Global.get(key).ok_or("failed")?;
+//     }
 }
 
 
+pub fn Env() -> GlobalEnv<'static>{
+    let env = GlobalEnv::new();
+    // SExp::Func(|values| Ok(SExp::Number(values.iter().sum())));
+    // env.insert("-", value: SExp);
+    // env.insert("*", value: SExp)
+    env
+}
 
-#[derive(Debug)]
+
+#[derive(Clone)]
 pub enum SExp {
     Number(f64),
     Bool(bool),
     Symbol(String),
     List(Vec<SExp>),
+    Func(SCallabe),
 }
 
+type SCallabe = fn(&[SExp]) -> Result<SExp, &'static str>;
 
 
 
@@ -49,7 +60,9 @@ impl fmt::Display for SExp {
                   .collect();
             format!("({})", xs.join(","))
           },
+         SExp::Func(_) => "Function {}".to_string(),
         };
+      
 
         write!(f,"{}", des)
     }
@@ -119,6 +132,7 @@ pub fn eval(exp: &SExp)  {
        SExp::Bool(_) => println!("bool is: {}", exp.to_string().clone()),
        SExp::Number(_n) =>println!("number is: {}", exp.to_string().clone()),
        SExp::Symbol(_s) => println!("symbol is: {}", exp.to_string().clone()),
-       SExp::List(list) => println!("list is {:?}", list),
+       SExp::List(list) => println!("list is {}", list),
    }
 }
+
