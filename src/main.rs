@@ -4,7 +4,7 @@ use std::io;
 
 pub mod tokenize;
 
-use crate::tokenize::{eval,GlobalEnv,parse,Tokenize};
+use crate::tokenize::{eval,make_Env ,SErr};
 
 
 fn slurp_expr() -> String {
@@ -16,13 +16,17 @@ fn slurp_expr() -> String {
   expr
 }
 
-fn main() ->Result<(), &'static str>{
-//    let env =  &mut GlobalEnv::new();
+fn main() {
+  let  env = make_Env() ;
   loop {
     println!("risp >");
     let expr = slurp_expr();
-    let exp = parse(&Tokenize(expr))?;
-    eval(&exp)
+    match eval(expr,&env) {
+        Ok(res) => println!("// woo => {}", res),
+        Err(e) => match e {
+         SErr::Msg(e) => println!("//ouch => {}",e),},
+    }
+   
   }
 }
 

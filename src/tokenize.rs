@@ -1,4 +1,4 @@
-use std::rc::Rc;
+
 use std::fmt;
 use std::collections::HashMap;
 
@@ -17,7 +17,7 @@ pub enum SExp {
 
 
 #[derive(Debug)]
-enum SErr {
+pub enum SErr {
    Msg(String),
 }
 
@@ -46,7 +46,7 @@ impl fmt::Display for SExp {
 }
 
 //分成token
-pub fn Tokenize(input: String) -> Vec<String> {
+pub fn tokenize(input: String) -> Vec<String> {
     input.replace("(", "( ").replace(")", " )")
     .split_whitespace()
     .map(|x| x.to_string())
@@ -54,20 +54,20 @@ pub fn Tokenize(input: String) -> Vec<String> {
 }
 
 
-pub fn parse(tokens: &[String])->Result<SExp,&'static str>  {
+pub fn parse(tokens: &[String])->Result<SExp,SErr>  {
    let (first, elements) = tokens.split_first().expect("error");
    match first.as_str() {
       "(" => parse_seq(elements),
-       ")" => Err("invalid"),
+       ")" => Err(SErr::Msg("invalid".to_string())),
        _ => Ok(parse_atom(first)),
    }
 }
 
-fn parse_seq(tokens:&[String]) -> Result<SExp,&'static str>{
+fn parse_seq(tokens:&[String]) -> Result<SExp,SErr>{
     let mut list = Vec::new();
     let mut t = tokens;
     loop {
-        let (first,rest) = t.split_first().ok_or("bad")?;
+        let (first,rest) = t.split_first().ok_or(SErr::Msg("bad".to_string()))?;
 
         if first == ")" {
             return Ok(SExp::List(list))
@@ -100,8 +100,6 @@ fn parse_atom(expr:&str) -> SExp {
 }
 
 // env
-
-
 #[derive(Clone)]
 pub struct GlobalEnv {
    Global :HashMap<&'static str,SExp>,
@@ -116,23 +114,28 @@ impl GlobalEnv {
 }
 }
 
-    
 
-
-
-pub fn Env() -> GlobalEnv{
+pub fn make_Env() -> GlobalEnv{
    let mut env: HashMap<&str, SExp> = HashMap::new();
     env.insert("+",SExp::Func( |args: &[SExp]|{
         let sum = parse_list_of_values(args)?.iter().sum();
         Ok(SExp::Number(sum))
     }));
   
+//    env.insert("-")
+    env.insert(">", SExp::Func(|args: &[SExp]|{
+        let numbers = parse_list_of_values(args)?;
+        Ok(SExp::Bool(compare(|a, b| a > b, &numbers)))
+    }));
+
+    //cons
+    //
     GlobalEnv {Global:env }
 }
 
 
 
-
+// + -
 fn parse_list_of_values(args:&[SExp]) -> Result<Vec<f64>,SErr> {
    let mut v = Vec::new();
    for i in args {
@@ -151,14 +154,55 @@ fn parse_single_float(exp: &SExp) -> Result<f64, SErr> {
   }
 }
 
-pub fn eval(exp: &SExp,env:GlobalEnv) -> Result<SExp,SErr>  {
+
+//bool
+
+
+fn compare<F>(closure:F,args:&[f64]) -> bool 
+        where F: Fn(&f64, &f64) -> bool{
+        let first = &args[0];
+        let rest = &args[1..];
+        match rest.first() {
+        Some(second) => closure(first,second) && compare(closure,&rest[1..]),
+        None => true,
+    } 
+}
+      
+
+fn eval_parse(exp: &SExp,env:&GlobalEnv) -> Result<SExp,SErr>  {
 
    match exp {
        SExp::Bool(_) => Ok(exp.clone()),
        SExp::Number(_n) =>Ok(exp.clone()),
        SExp::Symbol(s) => env.env_get(s).ok_or(SErr::Msg(format!("unexpected symbol {}", s))),
-       SExp::List(list) => unimplemented!(),
-       SExp::Func(F) => unimplemented!()
+       SExp::List(list) => {
+         let fir = list.first().ok_or(SErr::Msg("empty".to_string()))?;
+         let args = &list[1..];
+         match eval_parse(fir,env)? {
+             SExp::Func(f) => f(args),
+             _ =>Err(SErr::Msg("error".to_string())),
+         }
+       
+       },
+       SExp::Func(_F) => unimplemented!()
    }
 }
 
+
+pub fn eval(text:String, env:&GlobalEnv) ->Result<SExp,SErr> {
+   let parsed_exp = parse(&tokenize(text))?;
+  let evaled_exp = eval_parse(&parsed_exp, env)?;
+
+  Ok(evaled_exp)
+}
+
+
+pub mod test {
+ 
+   use super::*;
+    fn test_plus()   {
+        let env = make_Env();
+        // assert_eq!(3, env.env_get(key: &str))
+    }
+
+}
