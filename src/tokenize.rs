@@ -125,7 +125,7 @@ pub fn make_Env() -> GlobalEnv{
 //    env.insert("-")
     env.insert(">", SExp::Func(|args: &[SExp]|{
         let numbers = parse_list_of_values(args)?;
-        (compare(|a, b| a > b, &numbers))
+        Ok(SExp::Bool(compare2(|a, b| a > b, &numbers)))
     }));
 
     //cons
@@ -156,33 +156,22 @@ fn parse_single_float(exp: &SExp) -> Result<f64, SErr> {
 
 
 //bool
-
-
-// fn compare<F>(closure:F,args:&[f64]) -> bool 
-//         where F: Fn(&f64, &f64) -> bool{
-//         let first = &args[0];
-//         let rest = &args[1..];
-//         match rest.first() {
-//         Some(second) => closure(first,second) && compare(closure,&rest[1..]),
-//         None => true,
-//     } 
-// }
-      
-fn compare<F>(closure:F,args:&[f64]) -> Result<SExp,SErr> 
+fn compare2<F>(closure:F,args:&[f64]) -> bool
         where F: Fn(&f64, &f64) -> bool {
-             let first = args.first().ok_or(SErr::Msg("expected at least one number".to_string()))?;
-             let rest =&args[1..];
-             Ok(SExp::Bool(helper(closure, first, rest)))
- 
+            match (args.first(),&args[1..].first()) {
+                (Some(first),Some(second)) => {
+                    let cond = closure(first,second);
+                    if cond {
+                        compare2(closure, &args[1..])
+                    }
+                    else {
+                        false
+                    }
+                   },
+                (_,_) => true,
+            }
+            
 }
-      
-fn helper<F>(closure:F,first:&f64,args:&[f64]) -> bool
-        where F: Fn(&f64, &f64) -> bool {
-           match args.first() {
-               Some(second) => closure(first,second)&&helper(closure,second,&args[1..]),
-               None => true,
-           }
-        }
 
 fn eval_parse(exp: &SExp,env:&GlobalEnv) -> Result<SExp,SErr>  {
 
