@@ -125,7 +125,7 @@ pub fn make_Env() -> GlobalEnv{
 //    env.insert("-")
     env.insert(">", SExp::Func(|args: &[SExp]|{
         let numbers = parse_list_of_values(args)?;
-        Ok(SExp::Bool(compare(|a, b| a > b, &numbers)))
+        (compare(|a, b| a > b, &numbers))
     }));
 
     //cons
@@ -158,16 +158,31 @@ fn parse_single_float(exp: &SExp) -> Result<f64, SErr> {
 //bool
 
 
-fn compare<F>(closure:F,args:&[f64]) -> bool 
-        where F: Fn(&f64, &f64) -> bool{
-        let first = &args[0];
-        let rest = &args[1..];
-        match rest.first() {
-        Some(second) => closure(first,second) && compare(closure,&rest[1..]),
-        None => true,
-    } 
+// fn compare<F>(closure:F,args:&[f64]) -> bool 
+//         where F: Fn(&f64, &f64) -> bool{
+//         let first = &args[0];
+//         let rest = &args[1..];
+//         match rest.first() {
+//         Some(second) => closure(first,second) && compare(closure,&rest[1..]),
+//         None => true,
+//     } 
+// }
+      
+fn compare<F>(closure:F,args:&[f64]) -> Result<SExp,SErr> 
+        where F: Fn(&f64, &f64) -> bool {
+             let first = args.first().ok_or(SErr::Msg("expected at least one number".to_string()))?;
+             let rest =&args[1..];
+             Ok(SExp::Bool(helper(closure, first, rest)))
+ 
 }
       
+fn helper<F>(closure:F,first:&f64,args:&[f64]) -> bool
+        where F: Fn(&f64, &f64) -> bool {
+           match args.first() {
+               Some(second) => closure(first,second)&&helper(closure,second,&args[1..]),
+               None => true,
+           }
+        }
 
 fn eval_parse(exp: &SExp,env:&GlobalEnv) -> Result<SExp,SErr>  {
 
@@ -200,9 +215,27 @@ pub fn eval(text:String, env:&GlobalEnv) ->Result<SExp,SErr> {
 pub mod test {
  
    use super::*;
+
+   struct TestEnv {
+       env: GlobalEnv,
+    
+   }
+
+   impl TestEnv {
+       fn new() -> Self {
+           let env = make_Env();
+           Self{
+               env,
+           }
+       }
+
+      
+   }
+
     fn test_plus()   {
-        let env = make_Env();
+        let test_env = TestEnv::new();
         // assert_eq!(3, env.env_get(key: &str))
+      
     }
 
 }
