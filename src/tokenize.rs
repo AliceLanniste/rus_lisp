@@ -127,8 +127,17 @@ pub fn make_Env() -> GlobalEnv{
         let numbers = parse_list_of_values(args)?;
         Ok(SExp::Bool(compare2(|a, b| a > b, &numbers)))
     }));
+    env.insert("<", SExp::Func(|args: &[SExp]|{
+        let numbers = parse_list_of_values(args)?;
+        Ok(SExp::Bool(compare2(|a, b| a < b, &numbers)))
+    }));
+    env.insert("==", SExp::Func(|args: &[SExp]|{
+        let numbers = parse_list_of_values(args)?;
+        Ok(SExp::Bool(compare2(|a, b| a == b, &numbers)))
+    }));
+    //TODO :added not and or 
 
-    //cons
+    //TODO:cons,car cdr
     //
     GlobalEnv {Global:env }
 }
@@ -160,14 +169,14 @@ fn compare2<F>(closure:F,args:&[f64]) -> bool
         where F: Fn(&f64, &f64) -> bool {
             match (args.first(),&args[1..].first()) {
                 (Some(first),Some(second)) => {
-                    let cond = closure(first,second);
-                    if cond {
-                        compare2(closure, &args[1..])
-                    }
-                    else {
-                        false
-                    }
-                   },
+                        let cond = closure(first,second);
+                        if cond {
+                            compare2(closure, &args[1..])
+                        }
+                        else {
+                            false
+                        }
+                    },
                 (_,_) => true,
             }
             
