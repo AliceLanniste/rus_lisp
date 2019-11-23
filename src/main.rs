@@ -1,32 +1,42 @@
-
 use std::io;
+use std::io::Write;
 
+pub mod lexer;
+use crate::lexer::Lexer;
 
-pub mod tokenize;
-
-use crate::tokenize::{eval,make_Env ,SErr};
-
-
-fn slurp_expr() -> String {
-  let mut expr = String::new();
-  
-  io::stdin().read_line(&mut expr)
-    .expect("Failed to read line");
-  
-  expr
-}
 
 fn main() {
-  let  env = make_Env() ;
-  loop {
-    println!("risp >");
-    let expr = slurp_expr();
-    match eval(expr,&env) {
-        Ok(res) => println!("// woo => {}", res),
-        Err(e) => match e {
-         SErr::Msg(e) => println!("//ouch => {}",e),},
+    let mut stdin = io::stdin();
+    loop {
+      print!("lisp> ");
+      let mut input_line = String::new();
+      io::stdout().flush().ok().expect("could not flush stdout");
+
+      match stdin.read_line(&mut input_line){
+          Ok(bytes) => {
+            if bytes > 0 {
+                process_line(input_line);
+            } else {
+              println!("exited!");
+              break;
+            }
+          }
+
+          Err(e) => {
+            println!("Error occured while reading: {}", e);
+            println!("Exiting.");
+            break;
+          }
+      }
     }
-   
-  }
 }
+
+
+fn process_line(text:String)  {
+  let mut lexr = Lexer::new(text.as_str());
+  let value = lexr.read();
+  println!("well done {}",value);
+   
+}
+
 
