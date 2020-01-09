@@ -112,6 +112,14 @@ impl<'a> Lexer<'a> {
         SExp::WhiteSpace
     }
 
+    fn is_valid_for_identifier(&self, c:char) -> bool {
+        match c {
+            '!' |'$'|'%' | 'a'...'z'|'A'...'Z'|'0'...'9' => true,
+            _ => false,
+        }
+        
+    }
+
 }
 
 
