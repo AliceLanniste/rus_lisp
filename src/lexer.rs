@@ -4,6 +4,11 @@ use std::fmt;
 pub enum SExp {
     Bool(String),
     Number(i64),
+    WhiteSpace,
+    LEFTPAREN,
+    RIGHTPARE,
+    // Symbol,
+    //Comment
     EOF,
 }
 
@@ -14,6 +19,9 @@ impl fmt::Display for SExp {
         let description = match self {
             SExp::Bool(b)    => b.to_string(),
             SExp::Number(n)  => n.to_string(),
+            SExp::WhiteSpace  =>format!("WhiteSpace"),
+            SExp::LEFTPAREN  => "(".to_string(),
+            SExp::RIGHTPARE  => ")".to_string(),
             SExp::EOF    => "EOF".to_string(),
          };
 
@@ -40,8 +48,6 @@ pub struct Lexer<'a> {
 }
 
 
-
-
 impl<'a> Lexer<'a> {
     pub fn new(text:&'a str) -> Self {
 
@@ -54,60 +60,58 @@ impl<'a> Lexer<'a> {
     }
 
   
-    fn peek(&self) -> Option<char> {
-       
-        self.input.chars().next()
-         
+    fn peek2(&mut self,offset:usize) -> char {
+        let vec_char:Vec<char>  =self.input.chars().collect();
+        let size = self.pos+ offset;
+        vec_char[size]
     }
-
-    fn nth(&self, offset:usize) -> Option<char> {
-        self.input.chars().nth(offset)
-    }
-
     
-    pub fn read(&mut self) -> SExp {
+    pub fn read(&mut self) ->SExp {
+        if self.pos >= self.input.len() {
+           return SExp::EOF;
+        }
+        // 添加
+        match self.peek2(0) {
+            '#' => self.lex_bool(),
+            ' ' => self.lex_whitespace(),
+            _ => self.lex_number(),}
+       
+    }
+
+    fn lex_number(&mut self) -> SExp {
+        let start = self.pos;
+        loop {
+            match self.peek2(0) {
+                c  if c.is_numeric()=> {  
+                    self.pos +=1;  
+                },
+                    
+                _ => break,
+            }
+        }
+        SExp::Number(self.input[start..self.pos].parse().unwrap())
         
-      
-        while let Some(c) = self.peek() {
-            if c.is_numeric() {    
-                let mut n = c;
-                let cstart = self.pos; 
-                while n.is_numeric() {
-                    self.pos += 1;
-                   
-                    n = match self.nth(self.pos) {
-                       Some(v)  => v,
-                       None   => break,
-                   };
-                   
-                }
-                let value = self.input[cstart..self.pos].parse().unwrap();
-               
-            return SExp::Number(value);
-            }
-            else if c =='#' {
-              let cstart = self.pos;
-              self.pos += 1;
-              let value = &self.input[cstart..=self.pos]; 
-              if value =="#t" || value == "#f" {
-                   return SExp::Bool(String::from(value));
-              } else {
-                 panic!("line {}:{} unexpected char: {}", self.linenumber, self.pos, value);
-              } 
+    }
 
-            
-            }
+    fn lex_bool(&mut self) -> SExp {
+        let start = self.pos;
+        let value = &self.input[start..=self.pos+1]; 
+        if value =="#t" || value == "#f" {
+            return SExp::Bool(String::from(value));
+        } else {
+            panic!("line {}:{} unexpected char: {}", self.linenumber, self.pos, value);
+        } 
+        
+    }
 
-            else {
-
-            }
-
-            
+    fn lex_whitespace(&mut self) -> SExp {
+        while let ' ' = self.peek2(0) {
+            self.pos +=1;
         }
         
-      return SExp::EOF;
+        SExp::WhiteSpace
+    }
 
-    }  
 }
 
 
@@ -119,9 +123,9 @@ pub mod tests {
     #[test]
     fn test_number() {
 
-        assert_eq!(SExp::Number(0), Lexer::new("0").read());
+        assert_eq!(SExp::Number(0), Lexer::new("0\n").read());
 
-        assert_eq!(SExp::Number(12345),Lexer::new("12345").read());
+        assert_eq!(SExp::Number(12345),Lexer::new("12345\n").read());
     
     }
     #[test]
