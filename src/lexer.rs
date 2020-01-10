@@ -60,29 +60,47 @@ impl<'a> Lexer<'a> {
     }
 
   
-    fn peek2(&mut self,offset:usize) -> char {
-        let vec_char:Vec<char>  =self.input.chars().collect();
-        let size = self.pos+ offset;
-        vec_char[size]
-    }
     
-    pub fn read(&mut self) ->SExp {
-        if self.pos >= self.input.len() {
-           return SExp::EOF;
-        }
-        // 添加
-        match self.peek2(0) {
-            '#' => self.lex_bool(),
-            ' ' => self.lex_whitespace(),
-            _ => self.lex_number(),}
+    
+    fn peek(&mut self, offset:usize) -> Option<char> {
+        let pos  =self.pos + offset;
+        self.input.chars().nth(pos)
        
+    }
+
+    pub fn read(&mut self) ->SExp {
+        
+           while let Some(c) = self.peek(0) {
+                if c.is_numeric() || c == '-'  {
+                    
+                    return self.lex_number();
+                } 
+                else if c == '#' {
+                    return self.lex_bool();
+                } else {
+                     match c {
+                         ' ' => {self.pos +=1; 
+                         println!("whitespace");
+                               continue
+                               },
+
+                         '\n' => {unreachable!()}
+                         _  => {unreachable!()}      
+                     }   
+
+                }
+           }
+           
+            
+               
+            return SExp::EOF;
     }
 
     fn lex_number(&mut self) -> SExp {
         let start = self.pos;
         loop {
-            match self.peek2(0) {
-                c  if c.is_numeric()=> {  
+            match self.peek(0) {
+                Some(c)  if c.is_numeric() || c =='-' => {  
                     self.pos +=1;  
                 },
                     
@@ -104,17 +122,17 @@ impl<'a> Lexer<'a> {
         
     }
 
-    fn lex_whitespace(&mut self) -> SExp {
-        while let ' ' = self.peek2(0) {
-            self.pos +=1;
-        }
+    // fn lex_whitespace(&mut self) -> SExp {
+    //     while let ' ' = self.peek2(0) {
+    //         self.pos +=1;
+    //     }
         
-        SExp::WhiteSpace
-    }
+    //     SExp::WhiteSpace
+    // }
 
     fn is_valid_for_identifier(&self, c:char) -> bool {
         match c {
-            '!' |'$'|'%' | 'a'...'z'|'A'...'Z'|'0'...'9' => true,
+            '!' |'$'|'%' | 'a'..='z'|'A'..='Z'|'0'..='9' => true,
             _ => false,
         }
         
