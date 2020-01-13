@@ -136,14 +136,6 @@ impl<'a> Lexer<'a> {
         
     }
 
-    // fn lex_whitespace(&mut self) -> SExp {
-    //     while let ' ' = self.peek2(0) {
-    //         self.pos +=1;
-    //     }
-        
-    //     SExp::WhiteSpace
-    // }
-
     fn is_valid_for_identifier(&self, c:char) -> bool {
         match c {
             '!' |'$'|'%' | 'a'..='z'|'A'..='Z'|'0'..='9' => true,
@@ -154,6 +146,18 @@ impl<'a> Lexer<'a> {
 
 }
 
+
+impl Iterator for Lexer<'a> {
+    type Item = SExp<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.read() {
+            SExp::EOF  => None,
+            t       => Some(t),   
+        }
+        
+    }
+}
 
 
 #[cfg(test)]
