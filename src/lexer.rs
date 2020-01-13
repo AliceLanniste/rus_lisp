@@ -5,8 +5,8 @@ pub enum SExp {
     Bool(String),
     Number(i64),
     WhiteSpace,
-    LEFTPAREN,
-    RIGHTPARE,
+    LParen,
+    RParen,
     // Symbol,
     //Comment
     EOF,
@@ -20,8 +20,8 @@ impl fmt::Display for SExp {
             SExp::Bool(b)    => b.to_string(),
             SExp::Number(n)  => n.to_string(),
             SExp::WhiteSpace  =>format!("WhiteSpace"),
-            SExp::LEFTPAREN  => "(".to_string(),
-            SExp::RIGHTPARE  => ")".to_string(),
+            SExp::LParen  => "(".to_string(),
+            SExp::RParen  => ")".to_string(),
             SExp::EOF    => "EOF".to_string(),
          };
 
@@ -44,6 +44,7 @@ pub enum SExpError {
 pub struct Lexer<'a> {
     input: &'a str,
     linenumber: usize,
+    col: usize,
     pos: usize,
 }
 
@@ -54,6 +55,7 @@ impl<'a> Lexer<'a> {
         Lexer{
             input:text,
             linenumber: 1,
+            col: 0,
             pos:0,
         }
 
@@ -80,12 +82,21 @@ impl<'a> Lexer<'a> {
                 } else {
                      match c {
                          ' ' => {self.pos +=1; 
-                         println!("whitespace");
-                               continue
+                                self.col += 1;
+                                continue
                                },
 
-                         '\n' => {unreachable!()}
-                         _  => {unreachable!()}      
+                         '\n' => {self.linenumber +=1;
+                                 self.pos += 1;
+                                 self.col =0;
+                                 continue },
+                          '(' => {self.pos +=1;
+                                 self.col +=1;
+                                 return SExp::LParen},
+                          ')' => {self.pos +=1;
+                                 self.col +=1;
+                                 return SExp::RParen},
+                         _  =>panic!("line {}:{} unexpected char: {}", self.linenumber, self.col, c),
                      }   
 
                 }
@@ -101,23 +112,26 @@ impl<'a> Lexer<'a> {
         loop {
             match self.peek(0) {
                 Some(c)  if c.is_numeric() || c =='-' => {  
-                    self.pos +=1;  
+                    self.pos += 1;  
+                    self.col += 1;
                 },
                     
                 _ => break,
             }
         }
-        SExp::Number(self.input[start..self.pos].parse().unwrap())
+        SExp::Number(self.input[start..self.col].parse().unwrap())
         
     }
 
     fn lex_bool(&mut self) -> SExp {
         let start = self.pos;
-        let value = &self.input[start..=self.pos+1]; 
+        self.col = self.pos+1;
+        let value = &self.input[start..=self.col]; 
+       
         if value =="#t" || value == "#f" {
             return SExp::Bool(String::from(value));
         } else {
-            panic!("line {}:{} unexpected char: {}", self.linenumber, self.pos, value);
+            panic!("line {}:{} unexpected char: {}", self.linenumber, self.col, value);
         } 
         
     }
