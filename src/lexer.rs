@@ -147,8 +147,8 @@ impl<'a> Lexer<'a> {
 }
 
 
-impl Iterator for Lexer<'a> {
-    type Item = SExp<'a>;
+impl<'a> Iterator for Lexer<'a> {
+    type Item = SExp;
 
     fn next(&mut self) -> Option<Self::Item> {
         match self.read() {
