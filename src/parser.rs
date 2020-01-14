@@ -1,9 +1,6 @@
 
-// mod lexer;
-// pub mod Ast;
-
 use crate::lexer::{Lexer, SExp};
-use crate::Ast::AstNode;
+use crate::ast::AstNode;
 
 
 #[derive(Debug)]
@@ -18,9 +15,7 @@ impl<'a> Parser<'a> {
         }
     }
 
-  
-
-
+    // 这个方法应该改为，get_expr(&mut self, t:SExp)
     pub fn get_expr(&mut self) -> Option<AstNode> {
             match self.lexer.next() {
                 Some(SExp::Number(i)) => Some(AstNode::Number(i)),
@@ -30,12 +25,28 @@ impl<'a> Parser<'a> {
                                         return Some(AstNode::Bool(true));
                                     },
                 Some(SExp::LParen) => {
-                      unreachable!()},
+                     let list = self.get_list();
+                     return Some(AstNode::List(list)); },
                 Some(SExp::RParen) => {panic!("");}
                 _ => None,                   
             }
         }
 
+
+    fn get_list(&mut self)  -> Vec<AstNode>{
+        let mut list : Vec<AstNode> = Vec::new();
+        loop {
+            match self.lexer.next() {
+                Some(SExp::RParen)  =>{ return list;},
+                Some(token) => {
+                    unreachable!();
+                },
+                None => {return vec![];},
+            }
+        }
+
+
+    }
 
     // fn into_ast(arg: Type) -> RetType {
     //     unimplemented!();

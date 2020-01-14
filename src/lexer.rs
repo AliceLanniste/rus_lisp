@@ -1,5 +1,14 @@
 use std::fmt;
 
+
+// TODO
+// 返回值应改为Result类型，提供更好的错误提示
+//增加symbol，注释，转义字符、float、whitespace支持
+//lex_number需要改进
+//增加repl
+
+
+
 #[derive(Debug,PartialEq)]
 pub enum SExp {
     Bool(String),
@@ -60,8 +69,6 @@ impl<'a> Lexer<'a> {
         }
 
     }
-
-  
     
     
     fn peek(&mut self, offset:usize) -> Option<char> {
@@ -70,6 +77,7 @@ impl<'a> Lexer<'a> {
        
     }
 
+    
     pub fn read(&mut self) ->SExp {
         
            while let Some(c) = self.peek(0) {
@@ -107,6 +115,7 @@ impl<'a> Lexer<'a> {
             return SExp::EOF;
     }
 
+    //可以改成类似"12324"然后在转换类型
     fn lex_number(&mut self) -> SExp {
         let start = self.pos;
         loop {

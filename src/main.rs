@@ -3,7 +3,7 @@ use std::io::Write;
 
 pub mod lexer;
 pub mod parser;
-pub mod Ast;
+pub mod ast;
 
 use crate::parser::Parser;
 use crate::lexer::Lexer;
