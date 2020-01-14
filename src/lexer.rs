@@ -86,7 +86,7 @@ impl<'a> Lexer<'a> {
                                 continue
                                },
 
-                         '\n' => {self.linenumber +=1;
+                         '\n' |'\r'=> {self.linenumber +=1;
                                  self.pos += 1;
                                  self.col =0;
                                  continue },
@@ -125,7 +125,8 @@ impl<'a> Lexer<'a> {
 
     fn lex_bool(&mut self) -> SExp {
         let start = self.pos;
-        self.col = self.pos+1;
+        self.pos += 1;
+        self.col += 1;
         let value = &self.input[start..=self.col]; 
        
         if value =="#t" || value == "#f" {
