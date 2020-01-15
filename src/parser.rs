@@ -15,22 +15,13 @@ impl<'a> Parser<'a> {
         }
     }
 
-    // 这个方法应该改为，get_expr(&mut self, t:SExp)
-    pub fn get_expr(&mut self) -> Option<AstNode> {
-            match self.lexer.next() {
-                Some(SExp::Number(i)) => Some(AstNode::Number(i)),
-                Some(SExp::Bool(i)) => if i =="#f" {
-                                        return Some(AstNode::Bool(false));
-                                    } else {
-                                        return Some(AstNode::Bool(true));
-                                    },
-                Some(SExp::LParen) => {
-                     let list = self.get_list();
-                     return Some(AstNode::List(list)); },
-                Some(SExp::RParen) => {panic!("");}
-                _ => None,                   
-            }
+   
+    pub fn parse(&mut self) -> Option<AstNode> {
+        match self.lexer.next() {
+            Some(expr) => self.get_expr2(Some(expr)),
+            None => None,
         }
+    }
 
 
     fn get_list(&mut self)  -> Vec<AstNode>{
@@ -38,18 +29,38 @@ impl<'a> Parser<'a> {
         loop {
             match self.lexer.next() {
                 Some(SExp::RParen)  =>{ return list;},
-                Some(token) => {
-                    unreachable!();
+                token => {
+                    if let Some(exp)  = self.get_expr2(token) {
+
+                     list.push(exp);
+                    }
                 },
-                None => {return vec![];},
+                
             }
         }
 
 
     }
 
-    // fn into_ast(arg: Type) -> RetType {
-    //     unimplemented!();
-    // }
+    fn get_expr2(&mut self, token:Option<SExp>) ->Option<AstNode> {
+        match token {
+            Some(SExp::Number(i)) => Some(AstNode::Number(i)),
+            Some(SExp::Bool(i)) => if i =="#f" {
+                                        return Some(AstNode::Bool(false));
+                                    } else {
+                                        return Some(AstNode::Bool(true));
+                                    },
+            Some(SExp::LParen) => {
+                     let list = self.get_list();
+                     return Some(AstNode::List(list)); },
+            Some(SExp::RParen) => {panic!("unexpected char '(' ");}
+            _ =>None,
+        }
+        
+    }
+
+    fn eval(&self, exp:AstNode) {
+        unimplemented!();
+    }
 
 }

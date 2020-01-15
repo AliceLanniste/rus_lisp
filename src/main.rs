@@ -47,7 +47,7 @@ fn process_line(text:String)  {
 fn process_line2(text: String)  {
   let mut parser = Parser::new(text.as_str());
 
-  if let Some(value) = parser.get_expr(){
+  if let Some(value) = parser.parse(){
     println!("test {:?}", value);
   }
     
