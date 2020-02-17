@@ -16,8 +16,8 @@ pub enum SExp {
     WhiteSpace,
     LParen,
     RParen,
-    // Symbol,
-    //Comment
+    Symbol(String),
+    Comment,
     EOF,
 }
 
@@ -29,8 +29,10 @@ impl fmt::Display for SExp {
             SExp::Bool(b)    => b.to_string(),
             SExp::Number(n)  => n.to_string(),
             SExp::WhiteSpace  =>format!("WhiteSpace"),
+            SExp::Comment   => format!("Comment"),
             SExp::LParen  => "(".to_string(),
             SExp::RParen  => ")".to_string(),
+            SExp::Symbol(s)  => s.to_string(),
             SExp::EOF    => "EOF".to_string(),
          };
 
@@ -87,7 +89,11 @@ impl<'a> Lexer<'a> {
                 } 
                 else if c == '#' {
                     return self.lex_bool();
-                } else {
+                }
+                else if self.is_valid_for_identifier(c){
+                    return self.lex_symbol();   
+                 } 
+                else {
                      match c {
                          ' ' => {self.pos +=1; 
                                 self.col += 1;
@@ -104,13 +110,17 @@ impl<'a> Lexer<'a> {
                           ')' => {self.pos +=1;
                                  self.col +=1;
                                  return SExp::RParen},
+                          ';' => {
+                              self.pos +=1;
+                              self.col =0;
+                              self.linenumber +=1;
+                              return SExp::Comment
+                          },      
                          _  =>panic!("line {}:{} unexpected char: {}", self.linenumber, self.col, c),
                      }   
 
                 }
            }
-           
-            
                
             return SExp::EOF;
     }
@@ -143,6 +153,22 @@ impl<'a> Lexer<'a> {
         } else {
             panic!("line {}:{} unexpected char: {}", self.linenumber, self.col, value);
         } 
+        
+    }
+
+     fn lex_symbol(&mut self) -> SExp {
+        let start = self.pos;
+        loop {
+            match self.peek(0) {
+                Some(c)  if self.is_valid_for_identifier(c) =>{  
+                    self.pos += 1;  
+                    self.col += 1;
+                },
+                    
+                _ => break,
+            }
+        }
+        SExp::Symbol(self.input[start..self.col].to_string())
         
     }
 

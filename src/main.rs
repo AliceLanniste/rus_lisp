@@ -19,7 +19,7 @@ fn main() {
       match stdin.read_line(&mut input_line){
           Ok(bytes) => {
             if bytes > 0 {
-                process_line2(input_line);
+                process_line(input_line);
             } else {
               println!("exited!");
               break;
