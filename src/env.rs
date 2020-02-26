@@ -1,5 +1,5 @@
-pub mod Ast;
-use Ast::AstNode;
+pub mod parser;
+use parser::AstNode;
 
 pub struct env{
    map: Vec<Hashmap<String,AstNode>>
@@ -23,4 +23,17 @@ impl env {
     pub fn get(&self,key:String) ->Option<AstNode>{
         unimplemented!();
     }
+}
+
+
+pub fn add(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
+    unimplemented!();
+}
+
+pub fn sub(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
+    unimplemented!();
+}
+
+pub fn mul(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
+    unimplemented!();
 }
