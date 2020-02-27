@@ -1,8 +1,9 @@
 
+
 use crate::lexer::{Lexer, SExp};
+use std::fmt;
 
-
-#[derive(Debug,Clone)]
+#[derive(Clone)]
 pub enum AstNode {
     Number(i64),
     Bool(bool),
@@ -11,7 +12,25 @@ pub enum AstNode {
 }
 
 
-type SCallbe = fn(&[AstNode]) -> Result<AstNode, AstError>;
+impl fmt::Display for AstNode {
+   
+    fn fmt(&self,f:&mut fmt::Formatter<'_>) -> fmt::Result {
+        let des = match *self {
+            AstNode::Number(n) => n.to_string(),
+            AstNode::Bool(b) => if b { 
+               "#t".to_string()
+                } else {
+                    "#f".to_string()
+                }
+            AstNode::List(ref list) => unimplemented!(),
+            AstNode::Func(ref function) => unimplemented!()
+        };
+
+         write!(f,"{}", des)
+    }
+}
+
+type SCallbe = fn(&[AstNode]) -> Result<AstNode, AstErr>;
 
 #[derive(Debug)]
 pub enum AstErr {
@@ -75,8 +94,6 @@ impl<'a> Parser<'a> {
         
     }
 
-    fn eval(&self, exp:AstNode) {
-        unimplemented!();
-    }
+    
 
 }

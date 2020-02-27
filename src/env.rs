@@ -6,7 +6,7 @@ pub struct env{
 }
 
 impl env {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self {
             map: vec![Hashmap::new()]
         }
@@ -27,7 +27,12 @@ impl env {
 
 
 pub fn add(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
-    unimplemented!();
+    number.iter().fold(AstNode::Number(0) |a ,b| {
+        match(a ,b) {
+            (AstNode::Number(r1),AstNode::Number(r2))  => Ok(AstNode::Number(r1+r2)),
+            (_,_) => Err(AstErr::Msg("parser Error".to_string()))
+        }
+    })
 }
 
 pub fn sub(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {

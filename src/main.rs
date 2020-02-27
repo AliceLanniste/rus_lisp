@@ -3,7 +3,7 @@ use std::io::Write;
 
 pub mod lexer;
 pub mod parser;
-pub mod ast;
+
 
 use crate::parser::Parser;
 use crate::lexer::Lexer;
@@ -48,7 +48,7 @@ fn process_line2(text: String)  {
   let mut parser = Parser::new(text.as_str());
 
   if let Some(value) = parser.parse(){
-    println!("test {:?}", value);
+    println!("test {}", value);
   }
     
    
