@@ -3,11 +3,12 @@ use std::io::Write;
 
 pub mod lexer;
 pub mod parser;
-
+pub mod Eval;
+pub mod env;
 
 use crate::parser::Parser;
 use crate::lexer::Lexer;
-
+use crate::Eval::{eval,make_env};
 
 fn main() {
     let mut stdin = io::stdin();
@@ -46,10 +47,14 @@ fn process_line(text:String)  {
 
 fn process_line2(text: String)  {
   let mut parser = Parser::new(text.as_str());
+  let enviroment = make_env();
+  if let Some(exp) = parser.parse(){
+    let value=eval(exp,&enviroment); 
 
-  if let Some(value) = parser.parse(){
-    println!("test {}", value);
+    println!("test {}", value.unwrap());
+
   }
-    
+  
+  
    
 }

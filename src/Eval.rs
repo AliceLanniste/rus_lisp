@@ -1,29 +1,27 @@
-pub mod env;
-pub mod parser;
 
-use crate::env::env;
-use crate::parser::{AstNode,AstErr>;
+use crate::env::{Env,add};
+use crate::parser::{AstNode,AstErr};
 
-pub fn eval(exp:AstNode,enviroment:&env) -> Result<AstNode,AstErr> {
+
+
+pub fn eval(exp:AstNode,enviroment:&Env) -> Result<AstNode,AstErr> {
         match exp {
-           AstNode::Number(i) || AstNode::Bool(include_bytes!("")) => Ok(exp.clone()),
-           AstNode::list(list) => eval_list(list,enviroment),
-           
+           AstNode::Number(_) | AstNode::Bool(_) => Ok(exp.clone()),
+           AstNode::List(list) => eval_list(list,enviroment),
+           _ => unimplemented!()
         }
     }
 
-fn eval_atom(arg: Type) -> RetType {
-    unimplemented!();
+
+
+fn eval_list(list:Vec<AstNode>,enviroment:&Env) -> Result<AstNode,AstErr> {
+  unimplemented!()
 }
 
-fn eval_list(arg: Type) -> RetType {
-    unimplemented!();
-}
 
-
-fn make_env() -> env {
-    let enviroment =env::new();
-    enviroment.set_global("+".to_stirng(),env::add);
+pub fn make_env() -> Env {
+    let mut enviroment =Env::new();
+    enviroment.set_global("+".to_string(),AstNode::Func(add));
 
     enviroment
 }
