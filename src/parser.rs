@@ -8,6 +8,7 @@ pub enum AstNode {
     Number(i64),
     Bool(bool),
     List(Vec<AstNode>),
+    Symbol(String),
     Func(SCallbe)
 }
 
@@ -21,9 +22,17 @@ impl fmt::Display for AstNode {
                "#t".to_string()
                 } else {
                     "#f".to_string()
-                }
-            AstNode::List(ref list) => unimplemented!(),
-            AstNode::Func(ref function) => unimplemented!()
+                },
+            AstNode::Symbol(ref s) =>  format!("{}", s), 
+            AstNode::List(ref list) => {
+                let xs: Vec<String> = list
+                  .iter()
+                  .map(|x| x.to_string())
+                  .collect();
+            format!("({})", xs.join(" . "))
+          
+            },
+            AstNode::Func(ref _function) =>  format!("<callable >"),
         };
 
          write!(f,"{}", des)
@@ -85,9 +94,11 @@ impl<'a> Parser<'a> {
                                     } else {
                                         return Some(AstNode::Bool(true));
                                     },
+            Some(SExp::Symbol(s)) => Some(AstNode::Symbol(s)),       
             Some(SExp::LParen) => {
                      let list = self.get_list();
                      return Some(AstNode::List(list)); },
+                     
             Some(SExp::RParen) => {panic!("unexpected char '(' ");}
             _ =>None,
         }

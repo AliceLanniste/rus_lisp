@@ -13,11 +13,13 @@ impl env {
     }
   
     pub fn set(&mut self,name:String,value:AstNode)  {
-        self.env[0].insert(name,value)
+        let map = Hashmap::new();
+        map.insert(name,value);
+        self.env.insert(0,map)
     }
 
     pub fn set_global(&mut self,name:String,valeu:AstNode)  {
-        self.env.insert(name,AstNode)
+        self.env.push(name,AstNode)
     }
 
     pub fn get(&self,key:String) ->Option<AstNode>{
