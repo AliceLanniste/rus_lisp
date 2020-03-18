@@ -21,26 +21,40 @@ pub enum SExp {
     EOF,
 }
 
-
-impl fmt::Display for SExp {
-   
-    fn fmt(&self,f:&mut fmt::Formatter<'_>) -> fmt::Result {
-        let description = match self {
-            SExp::Bool(b)    => b.to_string(),
-            SExp::Number(n)  => n.to_string(),
-            SExp::WhiteSpace  =>format!("WhiteSpace"),
-            SExp::Comment   => format!("Comment"),
-            SExp::LParen  => "(".to_string(),
-            SExp::RParen  => ")".to_string(),
-            SExp::Symbol(s)  => s.to_string(),
-            SExp::EOF    => "EOF".to_string(),
-         };
-
-         write!(f,"{}", description)
-    
-        }
-
+#[derive(Debug)]
+pub struct Span {
+    beginLineNumber: usize, 
+    endLineNumber: usize, 
+    beginIndex: usize, 
+    endIndex: usize
 }
+
+
+#[derive(Debug)]
+pub  struct Token {
+    tokentype: SExp,
+    metaData: Span
+}
+
+// impl fmt::Display for SExp {
+   
+//     fn fmt(&self,f:&mut fmt::Formatter<'_>) -> fmt::Result {
+//         let description = match self {
+//             SExp::Bool(b)    => b.to_string(),
+//             SExp::Number(n)  => n.to_string(),
+//             SExp::WhiteSpace  =>format!("WhiteSpace"),
+//             SExp::Comment   => format!("Comment"),
+//             SExp::LParen  => "(".to_string(),
+//             SExp::RParen  => ")".to_string(),
+//             SExp::Symbol(s)  => s.to_string(),
+//             SExp::EOF    => "EOF".to_string(),
+//          };
+
+//          write!(f,"{}", description)
+    
+//         }
+
+// }
 
 
 #[derive(Debug)]
@@ -54,163 +68,256 @@ pub enum SExpError {
 #[derive(Debug)]
 pub struct Lexer<'a> {
     input: &'a str,
-    linenumber: usize,
+    line: usize,
     col: usize,
-    pos: usize,
+    charIndex: usize,
+    tokenVector:Vec<Token>,
+    currentTokenIndex: usize,
 }
 
-
-impl<'a> Lexer<'a> {
-    pub fn new(text:&'a str) -> Self {
-
+impl <'a> Lexer<'a> {
+    pub fn new(text: &'a str) -> Self {
         Lexer{
             input:text,
-            linenumber: 1,
-            col: 0,
-            pos:0,
+            line :1,
+            col: 1,
+            charIndex:0,
+            tokenVector: Vec::default(),
+            currentTokenIndex: 0
         }
-
     }
-    
-    
-    fn peek(&mut self, offset:usize) -> Option<char> {
-        let pos  =self.pos + offset;
-        self.input.chars().nth(pos)
+
+       pub fn current_char(&self) -> Option<char>{
+        self.nth(self.charIndex)
+    }
+
+    pub fn peek_char(&self) ->Option<char> {
+        self.nth(self.charIndex+1)
+    }
+
+
+
+    fn nth(&self, offset:usize) -> Option<char> {
+        self.input.chars().nth(offset)
        
     }
 
-    
-    pub fn read(&mut self) ->SExp {
-        
-           while let Some(c) = self.peek(0) {
-                if c.is_numeric() || c == '-'  {
-                    
-                    return self.lex_number();
-                } 
-                else if c == '#' {
-                    return self.lex_bool();
-                }
-                else if self.is_valid_for_identifier(c){
-                    return self.lex_symbol();   
-                 } 
-                else {
-                     match c {
-                         ' ' => {self.pos +=1; 
-                                self.col += 1;
-                                continue
-                               },
-
-                         '\n' |'\r'=> {self.linenumber +=1;
-                                 self.pos += 1;
-                                 self.col =0;
-                                 continue },
-                          '(' => {self.pos +=1;
-                                 self.col +=1;
-                                 return SExp::LParen},
-                          ')' => {self.pos +=1;
-                                 self.col +=1;
-                                 return SExp::RParen},
-                          ';' => {
-                              self.pos +=1;
-                              self.col =0;
-                              self.linenumber +=1;
-                              return SExp::Comment
-                          },      
-                         _  =>panic!("line {}:{} unexpected char: {}", self.linenumber, self.col, c),
-                     }   
-
-                }
-           }
-               
-            return SExp::EOF;
-    }
-
-    //可以改成类似"12324"然后在转换类型
-    fn lex_number(&mut self) -> SExp {
-        let start = self.pos;
-        loop {
-            match self.peek(0) {
-                Some(c)  if c.is_numeric() || c =='-' => {  
-                    self.pos += 1;  
-                    self.col += 1;
-                },
-                    
-                _ => break,
-            }
+    pub fn read(&self)  {
+        while let Some(c) = self.current_char() {
+             if c == '-' {
+                 self.Negativeoridentifer();
+             }
         }
-        SExp::Number(self.input[start..self.col].parse().unwrap())
+      
+    }
+
+    fn Negativeoridentifer(&self){
+      if self.peek().unwrap().is_digit(9){
+          self.lex_number()
+      } else {
+          self.lex_symbol()
+      }
         
     }
 
-    fn lex_bool(&mut self) -> SExp {
-        let start = self.pos;
-        self.pos += 1;
-        self.col += 1;
-        let value = &self.input[start..=self.col]; 
+    fn lex_number(&self)  {
        
-        if value =="#t" || value == "#f" {
-            return SExp::Bool(String::from(value));
-        } else {
-            panic!("line {}:{} unexpected char: {}", self.linenumber, self.col, value);
-        } 
+       
+    }
+
+    fn lex_symbol(&self)  {
+         let line = self.line;
+        let col = self.col;
+        let value = "";
+        let token = Token {
+            tokentype: SExp::Number(0),
+            metaData: Span {
+                beginLineNumber:line,
+                endLineNumber:line,
+                beginIndex:col,
+                endIndex:self.col,
+            }
+        }
         
     }
 
-     fn lex_symbol(&mut self) -> SExp {
-        let start = self.pos;
-        loop {
-            match self.peek(0) {
-                Some(c)  if self.is_valid_for_identifier(c) =>{  
-                    self.pos += 1;  
-                    self.col += 1;
-                },
-                    
-                _ => break,
-            }
-        }
-        SExp::Symbol(self.input[start..self.col].to_string())
-        
-    }
 
     fn is_valid_for_identifier(&self, c:char) -> bool {
         match c {
-            '!' |'$'|'%' | 'a'..='z'|'A'..='Z'|'0'..='9' => true,
+            '!' |'$'|'%' | 'a'..='z'|'A'..='Z'|'0'..='9'|'+'|'-'|'*'|'/' => true,
             _ => false,
         }
         
     }
-
 }
 
+// impl<'a> Lexer<'a> {
+//     pub fn new(text:&'a str) -> Self {
 
-impl<'a> Iterator for Lexer<'a> {
-    type Item = SExp;
+//         Lexer{
+//             input:text,
+//             linenumber: 1,
+//             col: 0,
+//             pos:0,
+//         }
 
-    fn next(&mut self) -> Option<Self::Item> {
-        match self.read() {
-            SExp::EOF  => None,
-            t       => Some(t),   
-        }
-        
-    }
-}
-
-
-#[cfg(test)]
-pub mod tests {
-    use super::*;
-
-    #[test]
-    fn test_number() {
-
-        assert_eq!(SExp::Number(0), Lexer::new("0\n").read());
-
-        assert_eq!(SExp::Number(12345),Lexer::new("12345\n").read());
+//     }
     
-    }
-    #[test]
-    fn test_bool()  {
-        assert_eq!(SExp::Bool(String::from("#t")), Lexer::new("#t").read() );
-        assert_eq!(SExp::Bool(String::from("#f")), Lexer::new("#f").read() );
-    }
-}
+//     pub fn current_char(&self) -> Option<char>{
+//         self.nth(0)
+//     }
+
+//     pub fn peek(&self) ->Option<char> {
+//         self.nth(1)
+//     }
+
+//     fn nth(&self, offset:usize) -> Option<char> {
+//         self.input.chars().nth(offset)
+       
+//     }
+
+
+    
+//     pub fn read(&mut self) ->SExp {
+        
+//            while let Some(c) = self.current_char() {
+//                 if  c == '-'  {
+                    
+//                     return self.Negativeoridentifer();
+//                 } 
+//                 else if c == '#' {
+//                     return self.lex_bool();
+//                 }
+//                 else if self.is_valid_for_identifier(c){
+//                     return self.lex_symbol();   
+//                  } 
+//                 else {
+//                      match c {
+//                          ' ' => {self.pos +=1; 
+//                                 self.col += 1;
+//                                 continue
+//                                },
+
+//                          '\n' |'\r'=> {self.linenumber +=1;
+//                                  self.pos += 1;
+//                                  self.col =0;
+//                                  continue },
+//                           '(' => {self.pos +=1;
+//                                  self.col +=1;
+//                                  return SExp::LParen},
+//                           ')' => {self.pos +=1;
+//                                  self.col +=1;
+//                                  return SExp::RParen},
+//                           ';' => {
+//                               self.pos +=1;
+//                               self.col =0;
+//                               self.linenumber +=1;
+//                               return SExp::Comment
+//                           },      
+//                          _  =>panic!("line {}:{} unexpected char: {}", self.linenumber, self.col, c),
+//                      }   
+
+//                 }
+//            }
+               
+//             return SExp::EOF;
+//     }
+
+//     fn Negativeoridentifer(&mut self) -> SExp{
+//       if self.peek().unwrap().is_digit(9){
+//           self.lex_number()
+//       } else {
+//           self.lex_symbol()
+//       }
+        
+//     }
+
+//     //可以改成类似"12324"然后在转换类型
+//     fn lex_number(&mut self) -> SExp {
+//         let start = self.pos;
+//         loop {
+//             match self.peek() {
+//                 Some(c)  if c.is_numeric() || c =='-' => {  
+//                     self.pos += 1;  
+//                     self.col += 1;
+//                 },
+                    
+//                 _ => break,
+//             }
+//         }
+//         SExp::Number(self.input[start..self.col].parse().unwrap())
+        
+//     }
+
+//     fn lex_bool(&mut self) -> SExp {
+//         let start = self.pos;
+//         self.pos += 1;
+//         self.col += 1;
+//         let value = &self.input[start..=self.col]; 
+       
+//         if value =="#t" || value == "#f" {
+//             return SExp::Bool(String::from(value));
+//         } else {
+//             panic!("line {}:{} unexpected char: {}", self.linenumber, self.col, value);
+//         } 
+        
+//     }
+
+//      fn lex_symbol(&mut self) -> SExp {
+//         let start = self.pos;
+//         loop {
+//             match self.peek() {
+//                 Some(c)  if self.is_valid_for_identifier(c) =>{  
+//                     self.pos += 1;  
+//                     self.col += 1;
+//                 },
+                    
+//                 _ => break,
+//             }
+//         }
+//         SExp::Symbol(self.input[start..self.col].to_string())
+        
+//     }
+
+//     fn is_valid_for_identifier(&self, c:char) -> bool {
+//         match c {
+//             '!' |'$'|'%' | 'a'..='z'|'A'..='Z'|'0'..='9'|'+'|'-'|'*'|'/' => true,
+//             _ => false,
+//         }
+        
+//     }
+
+// }
+
+
+// impl<'a> Iterator for Lexer<'a> {
+//     type Item = SExp;
+
+//     fn next(&mut self) -> Option<Self::Item> {
+//         match self.read() {
+//             SExp::EOF  => None,
+//             t       => Some(t),   
+//         }
+        
+//     }
+// }
+
+
+// #[cfg(test)]
+// pub mod tests {
+//     use super::*;
+
+//     #[test]
+//     fn test_number() {
+
+//         assert_eq!(SExp::Number(0), Lexer::new("0\n").read());
+
+//         assert_eq!(SExp::Number(12345),Lexer::new("12345\n").read());
+    
+//     }
+//     #[test]
+//     fn test_bool()  {
+//         assert_eq!(SExp::Bool(String::from("#t")), Lexer::new("#t").read() );
+//         assert_eq!(SExp::Bool(String::from("#f")), Lexer::new("#f").read() );
+//     }
+// }

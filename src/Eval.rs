@@ -1,8 +1,11 @@
-pub mod env;
-pub mod parser;
+// pub mod env;
+// pub mod parser;
 
 use crate::env::env;
-use crate::parser::{AstNode,AstErr>;
+use crate::parser::{AstNode,AstErr};
+
+// use crate::env::env;
+// use crate::parser::{AstNode,AstErr>;
 
 pub fn eval(exp:AstNode,enviroment:&env) -> Result<AstNode,AstErr> {
         match exp {

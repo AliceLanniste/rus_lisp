@@ -1,15 +1,15 @@
-use std::io;
-use std::io::Write;
-
 pub mod lexer;
 pub mod parser;
 
 
-use crate::parser::Parser;
-use crate::lexer::Lexer;
 
+use std::io;
+use std::io::Write;
+use parser::Parser;
+use lexer::Lexer;
 
 fn main() {
+ 
     let mut stdin = io::stdin();
     loop {
       print!("lisp> ");
@@ -39,7 +39,7 @@ fn main() {
 fn process_line(text:String)  {
   let mut lexr = Lexer::new(text.as_str());
   let value = lexr.read();
-  println!("well done {}",value);
+  // println!("well done {}",value);
    
 }
 

@@ -1,5 +1,5 @@
-pub mod parser;
-use parser::AstNode;
+// pub mod parser;
+use crate::parser::AstNode;
 
 pub struct env{
    map: Vec<Hashmap<String,AstNode>>
