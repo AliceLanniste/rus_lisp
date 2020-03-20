@@ -1,4 +1,5 @@
-use std::fmt;
+
+use std::str::Chars;
 
 
 // TODO
@@ -36,25 +37,8 @@ pub  struct Token {
     metaData: Span
 }
 
-// impl fmt::Display for SExp {
-   
-//     fn fmt(&self,f:&mut fmt::Formatter<'_>) -> fmt::Result {
-//         let description = match self {
-//             SExp::Bool(b)    => b.to_string(),
-//             SExp::Number(n)  => n.to_string(),
-//             SExp::WhiteSpace  =>format!("WhiteSpace"),
-//             SExp::Comment   => format!("Comment"),
-//             SExp::LParen  => "(".to_string(),
-//             SExp::RParen  => ")".to_string(),
-//             SExp::Symbol(s)  => s.to_string(),
-//             SExp::EOF    => "EOF".to_string(),
-//          };
 
-//          write!(f,"{}", description)
-    
-//         }
 
-// }
 
 
 #[derive(Debug)]
@@ -67,40 +51,52 @@ pub enum SExpError {
 
 #[derive(Debug)]
 pub struct Lexer<'a> {
-    input: &'a str,
+    chars: Chars<'a>,
+    prev: char,
     line: usize,
     col: usize,
     charIndex: usize,
-    tokenVector:Vec<Token>,
     currentTokenIndex: usize,
 }
 
 impl <'a> Lexer<'a> {
     pub fn new(text: &'a str) -> Self {
         Lexer{
-            input:text,
+            chars:text.chars(),
+            prev:'\0',
             line :1,
             col: 1,
             charIndex:0,
-            tokenVector: Vec::default(),
             currentTokenIndex: 0
         }
     }
 
-       pub fn current_char(&self) -> Option<char>{
-        self.nth(self.charIndex)
+    pub fn current_char(&self) -> Option<char>{
+        self.nth(0)
     }
 
     pub fn peek_char(&self) ->Option<char> {
-        self.nth(self.charIndex+1)
+        self.nth(1)
     }
 
+    pub fn next_char(&mut self) -> Option<char> {
+        let c = self.chars.next()?;
+        Some(c)
+    }
 
+    pub fn is_eof(&self) -> bool {
+        self.chars.as_str().is_empty()
+    }
 
     fn nth(&self, offset:usize) -> Option<char> {
-        self.input.chars().nth(offset)
+        self.chars().nth(offset)
        
     }
+
+    fn chars(&self) ->Chars<'a>{
+        self.chars.clone()
+    }
+
 
     pub fn read(&self)  {
         while let Some(c) = self.current_char() {
@@ -112,7 +108,7 @@ impl <'a> Lexer<'a> {
     }
 
     fn Negativeoridentifer(&self){
-      if self.peek().unwrap().is_digit(9){
+      if self.peek_char().unwrap().is_digit(9){
           self.lex_number()
       } else {
           self.lex_symbol()
@@ -137,7 +133,7 @@ impl <'a> Lexer<'a> {
                 beginIndex:col,
                 endIndex:self.col,
             }
-        }
+        };
         
     }
 
