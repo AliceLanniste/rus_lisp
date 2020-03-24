@@ -55,8 +55,6 @@ pub struct Lexer<'a> {
     prev: char,
     line: usize,
     col: usize,
-    charIndex: usize,
-    currentTokenIndex: usize,
 }
 
 impl <'a> Lexer<'a> {
@@ -66,21 +64,21 @@ impl <'a> Lexer<'a> {
             prev:'\0',
             line :1,
             col: 1,
-            charIndex:0,
-            currentTokenIndex: 0
+           
         }
     }
 
-    pub fn current_char(&self) -> Option<char>{
+    pub fn current_char(&self) -> char{
         self.nth(0)
     }
 
-    pub fn peek_char(&self) ->Option<char> {
+    pub fn peek_char(&self) ->char {
         self.nth(1)
     }
 
     pub fn next_char(&mut self) -> Option<char> {
         let c = self.chars.next()?;
+        self.prev = c;
         Some(c)
     }
 
@@ -88,9 +86,13 @@ impl <'a> Lexer<'a> {
         self.chars.as_str().is_empty()
     }
 
-    fn nth(&self, offset:usize) -> Option<char> {
-        self.chars().nth(offset)
+    fn nth(&self, offset:usize) -> char {
+        self.chars().nth(offset).unwrap()
        
+    }
+
+    fn prev(&self) -> char {
+        self.prev
     }
 
     fn chars(&self) ->Chars<'a>{
@@ -98,17 +100,18 @@ impl <'a> Lexer<'a> {
     }
 
 
-    pub fn read(&self)  {
-        while let Some(c) = self.current_char() {
-             if c == '-' {
-                 self.Negativeoridentifer();
-             }
+    pub fn read(&self) ->Token {
+        let first_char = self.next_char().unwrap();
+        match first_char {
+            '-' => self.Negativeoridentifer(),
+            
+            
         }
       
     }
 
-    fn Negativeoridentifer(&self){
-      if self.peek_char().unwrap().is_digit(9){
+    fn Negativeoridentifer(&self) ->Token{
+      if self.current_char().is_digit(9){
           self.lex_number()
       } else {
           self.lex_symbol()
@@ -116,37 +119,60 @@ impl <'a> Lexer<'a> {
         
     }
 
-    fn lex_number(&self)  {
-       
+    fn lex_number(&mut self) ->Token {
+        debug_assert!('0'<=self.prev() && self.prev()<='9' || self.prev()=='-');
+        // 无法识别float类型
+        while self.eat_while(is_digit) {
+            unimplemented!();
+        }
+        unimplemented!()
        
     }
 
-    fn lex_symbol(&self)  {
+    fn lex_symbol(&mut self) -> Token {
+          let start = self.col;
          let line = self.line;
-        let col = self.col;
-        let value = "";
+       
+        let mut value: String =String::default();
+         while self.eat_while(is_valid_for_identifier) {
+            let c = self.next_char().unwrap();
+            self.col +=1;
+             value.push(c);
+         }
         let token = Token {
-            tokentype: SExp::Number(0),
+            tokentype: SExp::Symbol(value),
             metaData: Span {
                 beginLineNumber:line,
                 endLineNumber:line,
-                beginIndex:col,
+                beginIndex:start,
                 endIndex:self.col,
             }
         };
-        
+        token
     }
 
 
-    fn is_valid_for_identifier(&self, c:char) -> bool {
+    
+
+    fn eat_while<F>(&mut self,mut predicate: F)  -> bool
+      where F: FnMut(char)-> bool  {
+          
+    predicate(self.current_char())  && !self.is_eof()
+    }
+}
+
+
+fn is_valid_for_identifier(c:char) -> bool {
         match c {
             '!' |'$'|'%' | 'a'..='z'|'A'..='Z'|'0'..='9'|'+'|'-'|'*'|'/' => true,
             _ => false,
         }
         
     }
-}
 
+fn is_digit(c:char) -> bool {
+    c.is_digit(9)
+}    
 // impl<'a> Lexer<'a> {
 //     pub fn new(text:&'a str) -> Self {
 
