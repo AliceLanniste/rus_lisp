@@ -1,6 +1,6 @@
 
 use std::str::Chars;
-
+use std::fmt;
 
 // TODO
 // 返回值应改为Result类型，提供更好的错误提示
@@ -14,6 +14,7 @@ use std::str::Chars;
 pub enum SExp {
     Bool(String),
     Number(i64),
+    Float(f64),
     WhiteSpace,
     LParen,
     RParen,
@@ -21,7 +22,23 @@ pub enum SExp {
     Comment,
     EOF,
 }
+ impl fmt::Display for SExp{
+         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let description = match self {
+            SExp::Bool(b) => format!("bool {}",b),
+            SExp::Number(n) =>  format!("Number {}",n),
+             SExp::Float(f) =>  format!("Float {}",f),
+            SExp::WhiteSpace => format!("WhiteSpace"),
+            SExp::Comment => format!("Comment"),
+            SExp::LParen =>  format!("LParen c"),
+            SExp::RParen =>  format!("RParen c"),
+            SExp::Symbol(s) =>  format!("Symbol {}",s),
+            SExp::EOF =>  format!("EOF"),
+        };
 
+        write!(f, "{}", description)
+    }
+    } 
 #[derive(Debug)]
 pub struct Span {
     beginLineNumber: usize, 
@@ -100,17 +117,19 @@ impl <'a> Lexer<'a> {
     }
 
 
-    pub fn read(&self) ->Token {
+    pub fn read(&mut self) ->Token {
         let first_char = self.next_char().unwrap();
         match first_char {
-            '-' => self.Negativeoridentifer(),
-            
-            
+            '-' => self.negativeoridentifer(),
+            '#' => self.lex_bool(),
+            c if is_valid_for_identifier(c) => self.lex_symbol(),
+            c if is_digit(c)=> self.lex_number(),
+            _ => panic!(" bad token"),
         }
       
     }
 
-    fn Negativeoridentifer(&self) ->Token{
+    fn negativeoridentifer(&mut self) ->Token{
       if self.current_char().is_digit(9){
           self.lex_number()
       } else {
@@ -120,12 +139,27 @@ impl <'a> Lexer<'a> {
     }
 
     fn lex_number(&mut self) ->Token {
-        debug_assert!('0'<=self.prev() && self.prev()<='9' || self.prev()=='-');
-        // 无法识别float类型
-        while self.eat_while(is_digit) {
-            unimplemented!();
+        debug_assert!(self.prev()>='0' && self.prev()<='9' || self.prev() =='-');
+        let start = self.col;
+        let value=self.prev().to_string();
+        let mut seed = false;
+        let meta_data = Span {
+                beginLineNumber:self.line,
+                endLineNumber:self.line,
+                beginIndex:start,
+                endIndex:self.col,
+            };
+       
+        if seed {
+            
+           return Token {tokentype: SExp::Float(value.parse::<f64>().unwrap()),
+                  metaData:meta_data}
+        }else {
+           return Token {tokentype: SExp::Number(value.parse::<i64>().unwrap()),
+         metaData:meta_data}
         }
-        unimplemented!()
+         
+        // 无法识别float类型
        
     }
 
@@ -133,11 +167,12 @@ impl <'a> Lexer<'a> {
           let start = self.col;
          let line = self.line;
        
-        let mut value: String =String::default();
-         while self.eat_while(is_valid_for_identifier) {
-            let c = self.next_char().unwrap();
-            self.col +=1;
-             value.push(c);
+        let mut value: String = self.prev().to_string();
+         loop {
+             match self.next_char() {
+                 Some(c) if is_valid_for_identifier(c)=>{value.push(c); self.col +=1;},
+                 _ => break,
+             }
          }
         let token = Token {
             tokentype: SExp::Symbol(value),
@@ -151,20 +186,32 @@ impl <'a> Lexer<'a> {
         token
     }
 
+    fn lex_bool(&mut self) ->Token {
+        debug_assert!(self.current_char()=='t' || self.current_char()=='f');
+        let start = self.col;
+        self.col +=1;
+        let mut value = "#".to_string();
+        value.push(self.next_char().unwrap());
 
+        Token{
+            tokentype:SExp::Bool(value),
+            metaData: Span{
+                beginLineNumber:self.line,
+                endLineNumber:self.line,
+                beginIndex:start,
+                endIndex:self.col,
+            }
+        }
+        
+    }
     
 
-    fn eat_while<F>(&mut self,mut predicate: F)  -> bool
-      where F: FnMut(char)-> bool  {
-          
-    predicate(self.current_char())  && !self.is_eof()
-    }
 }
 
 
 fn is_valid_for_identifier(c:char) -> bool {
         match c {
-            '!' |'$'|'%' | 'a'..='z'|'A'..='Z'|'0'..='9'|'+'|'-'|'*'|'/' => true,
+            '!' |'$'|'%' | 'a'..='z'|'A'..='Z'|'+'|'-'|'*'|'/' => true,
             _ => false,
         }
         
@@ -324,22 +371,43 @@ fn is_digit(c:char) -> bool {
 //     }
 // }
 
-
-// #[cfg(test)]
-// pub mod tests {
-//     use super::*;
-
-//     #[test]
-//     fn test_number() {
-
-//         assert_eq!(SExp::Number(0), Lexer::new("0\n").read());
-
-//         assert_eq!(SExp::Number(12345),Lexer::new("12345\n").read());
+pub fn helper(token: Token) -> SExp {
+        token.tokentype
+}
+#[cfg(test)]
+pub mod tests {
+    use super::*;
     
-//     }
-//     #[test]
-//     fn test_bool()  {
-//         assert_eq!(SExp::Bool(String::from("#t")), Lexer::new("#t").read() );
-//         assert_eq!(SExp::Bool(String::from("#f")), Lexer::new("#f").read() );
-//     }
-// }
+   
+    // #[test]
+    // fn test_number() {
+
+    //     assert_eq!(SExp::Number(0), Lexer::new("0\n").read());
+
+    //     assert_eq!(SExp::Number(12345),Lexer::new("12345\n").read());
+    
+    // }
+    // #[test]
+    // fn test_bool()  {
+    //     assert_eq!(SExp::Bool(String::from("#t")), Lexer::new("#t").read() );
+    //     assert_eq!(SExp::Bool(String::from("#f")), Lexer::new("#f").read() );
+    // }
+
+    fn helper2(token: Token) -> String {
+        token.tokentype.to_string()
+    }
+
+    #[test]
+    fn test_identifier()  {
+        let value = Lexer::new("-").read();
+        // let output = SExp::Symbol(String::from("-"));
+        assert_eq!(format!("Symbol -"), helper2(value));
+        let value2 = Lexer::new("a").read();
+         assert_eq!(format!("Symbol a"), helper2(value2));
+    }
+    #[test]
+     fn test_bool()  {
+        assert_eq!(format!("bool #t"), helper2(Lexer::new("#t").read()) );
+        assert_eq!(format!("bool #f"), helper2(Lexer::new("#f").read()) );
+    }
+}

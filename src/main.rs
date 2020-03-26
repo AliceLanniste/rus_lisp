@@ -5,8 +5,8 @@ pub mod parser;
 
 use std::io;
 use std::io::Write;
-use parser::Parser;
-use lexer::Lexer;
+// use parser::Parser;
+use lexer::{Lexer,helper};
 
 fn main() {
  
@@ -39,17 +39,19 @@ fn main() {
 fn process_line(text:String)  {
   let mut lexr = Lexer::new(text.as_str());
   let value = lexr.read();
-  // println!("well done {}",value);
+  let v = helper(value);
+ 
+  println!("well done {}",v);
    
 }
 
 
-fn process_line2(text: String)  {
-  let mut parser = Parser::new(text.as_str());
+// fn process_line2(text: String)  {
+//   let mut parser = Parser::new(text.as_str());
 
-  if let Some(value) = parser.parse(){
-    println!("test {}", value);
-  }
+//   if let Some(value) = parser.parse(){
+//     println!("test {}", value);
+//   }
     
    
-}
+// }
