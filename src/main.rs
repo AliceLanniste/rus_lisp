@@ -6,7 +6,7 @@ pub mod parser;
 use std::io;
 use std::io::Write;
 // use parser::Parser;
-use lexer::{Lexer,helper};
+use lexer::Lexer;
 
 fn main() {
  
@@ -19,7 +19,7 @@ fn main() {
       match stdin.read_line(&mut input_line){
           Ok(bytes) => {
             if bytes > 0 {
-                process_line(input_line);
+                // process_line(input_line);
             } else {
               println!("exited!");
               break;
@@ -36,14 +36,14 @@ fn main() {
 }
 
 
-fn process_line(text:String)  {
-  let mut lexr = Lexer::new(text.as_str());
-  let value = lexr.read();
-  let v = helper(value);
+// fn process_line(text:String)  {
+//   let mut lexr = Lexer::new(text.as_str());
+//   let value = lexr.read();
+//   let v = helper(value);
  
-  println!("well done {}",v);
+//   println!("well done {}",v);
    
-}
+// }
 
 
 // fn process_line2(text: String)  {

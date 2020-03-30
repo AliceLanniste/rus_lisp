@@ -22,23 +22,7 @@ pub enum SExp {
     Comment,
     EOF,
 }
- impl fmt::Display for SExp{
-         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let description = match self {
-            SExp::Bool(b) => format!("bool {}",b),
-            SExp::Number(n) =>  format!("Number {}",n),
-             SExp::Float(f) =>  format!("Float {}",f),
-            SExp::WhiteSpace => format!("WhiteSpace"),
-            SExp::Comment => format!("Comment"),
-            SExp::LParen =>  format!("LParen c"),
-            SExp::RParen =>  format!("RParen c"),
-            SExp::Symbol(s) =>  format!("Symbol {}",s),
-            SExp::EOF =>  format!("EOF"),
-        };
-
-        write!(f, "{}", description)
-    }
-    } 
+ 
 #[derive(Debug)]
 pub struct Span {
     beginLineNumber: usize, 
@@ -120,46 +104,52 @@ impl <'a> Lexer<'a> {
     pub fn read(&mut self) ->Token {
         let first_char = self.next_char().unwrap();
         match first_char {
-            '-' => self.negativeoridentifer(),
             '#' => self.lex_bool(),
+            c if is_digit(c) || c=='-'&& is_digit(self.current_char())=> self.lex_number(),
             c if is_valid_for_identifier(c) => self.lex_symbol(),
-            c if is_digit(c)=> self.lex_number(),
-            _ => panic!(" bad token"),
+            '/'  => self.lex_comment(),
+            c if is_whitespace(c) => self.lex_whitespace(),
+            '('=> self.lex_Paren(SExp::LParen),
+             ')'=> self.lex_Paren(SExp::RParen),
+            _=>panic!("line {}:{} unexpected char:", self.line, self.col),
         }
-      
+        
+       
     }
 
-    fn negativeoridentifer(&mut self) ->Token{
-      if self.current_char().is_digit(9){
-          self.lex_number()
-      } else {
-          self.lex_symbol()
-      }
-        
-    }
 
     fn lex_number(&mut self) ->Token {
         debug_assert!(self.prev()>='0' && self.prev()<='9' || self.prev() =='-');
         let start = self.col;
-        let value=self.prev().to_string();
+        let mut value=self.prev().to_string();
         let mut seed = false;
-        let meta_data = Span {
+         loop {
+             match self.next_char() {
+                 Some(c) if is_digit(c)=>{value.push(c); self.col +=1;},
+                 Some(c) if c=='.' && is_digit(self.current_char()) => {
+                     value.push(c);self.col +=1; seed = true;
+                 },
+                 _ => break,
+             }
+         }
+          let meta_data = Span {
                 beginLineNumber:self.line,
                 endLineNumber:self.line,
                 beginIndex:start,
                 endIndex:self.col,
             };
        
+       
         if seed {
             
            return Token {tokentype: SExp::Float(value.parse::<f64>().unwrap()),
                   metaData:meta_data}
-        }else {
+        }else { 
            return Token {tokentype: SExp::Number(value.parse::<i64>().unwrap()),
          metaData:meta_data}
         }
          
-        // 无法识别float类型
+       
        
     }
 
@@ -183,6 +173,7 @@ impl <'a> Lexer<'a> {
                 endIndex:self.col,
             }
         };
+        
         token
     }
 
@@ -205,9 +196,81 @@ impl <'a> Lexer<'a> {
         
     }
     
+    fn lex_comment(&mut self) -> Token {
+        debug_assert!(self.prev()==';' &&self.current_char()==';');
+        let start = self.col;
+        self.eat_while(|c| c!='\n');
+        
+        Token{
+            tokentype:SExp::Comment,
+            metaData: Span{
+                beginLineNumber:self.line,
+                endLineNumber:self.line,
+                beginIndex:start,
+                endIndex:self.col,
+            }
+        }
+    }
+
+    fn lex_whitespace(&mut self) -> Token {
+       debug_assert!(is_whitespace(self.prev()));
+       let start = self.col;
+       self.eat_while(is_whitespace);
+         Token{
+            tokentype:SExp::WhiteSpace,
+            metaData: Span{
+                beginLineNumber:self.line,
+                endLineNumber:self.line,
+                beginIndex:start,
+                endIndex:self.col,
+            }
+        }
+
+    }
+    fn lex_string(&mut self) -> Token {
+        unimplemented!();
+    }
+
+    fn lex_Paren(&self,t: SExp) -> Token {
+        Token{
+            tokentype:t,
+            metaData: Span{
+                beginLineNumber:self.line,
+                endLineNumber:self.line,
+                beginIndex:self.col,
+                endIndex:self.col,
+            }
+        }
+    }
+       
+    
+
+    fn eat_while<F>(&mut self, mut predicate: F) -> usize
+    where
+        F: FnMut(char) -> bool,
+    {
+        let mut eaten: usize = 0;
+        while predicate(self.current_char()) && !self.is_eof() {
+            eaten += 1;
+            self.next_char();
+        }
+
+        eaten
+    }
+
 
 }
 
+
+fn is_whitespace(c:char) -> bool {
+    match c {
+        |'\u{000C}' 
+        |'\t'
+        |'\n'
+        |'\r' => true,
+        _ =>false,
+    }
+}
 
 fn is_valid_for_identifier(c:char) -> bool {
         match c {
@@ -371,43 +434,55 @@ fn is_digit(c:char) -> bool {
 //     }
 // }
 
-pub fn helper(token: Token) -> SExp {
-        token.tokentype
-}
+
 #[cfg(test)]
 pub mod tests {
-    use super::*;
-    
-   
-    // #[test]
-    // fn test_number() {
+ use super::*;
+impl fmt::Display for SExp{
+         fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let description = match self {
+            SExp::Bool(b) => format!("bool {}",b),
+            SExp::Number(n) =>  format!("Number {}",n),
+             SExp::Float(f) =>  format!("Float {}",f),
+            SExp::WhiteSpace => format!("WhiteSpace"),
+            SExp::Comment => format!("Comment"),
+            SExp::LParen =>  format!("LParen c"),
+            SExp::RParen =>  format!("RParen c"),
+            SExp::Symbol(s) =>  format!("Symbol {}",s),
+            SExp::EOF =>  format!("EOF"),
+        };
 
-    //     assert_eq!(SExp::Number(0), Lexer::new("0\n").read());
+        write!(f, "{}", description)
+    }
+    } 
 
-    //     assert_eq!(SExp::Number(12345),Lexer::new("12345\n").read());
-    
-    // }
-    // #[test]
-    // fn test_bool()  {
-    //     assert_eq!(SExp::Bool(String::from("#t")), Lexer::new("#t").read() );
-    //     assert_eq!(SExp::Bool(String::from("#f")), Lexer::new("#f").read() );
-    // }
-
-    fn helper2(token: Token) -> String {
+      fn helper(token: Token) -> String {
         token.tokentype.to_string()
     }
+   
+    #[test]
+    fn test_number() {
+
+        assert_eq!(format!("Number 0"), helper(Lexer::new("0").read()));
+        assert_eq!(format!("Number 12345"),helper(Lexer::new("12345").read()));
+        assert_eq!(format!("Number -12345"),helper(Lexer::new("-12345").read()));
+        assert_eq!(format!("Float -123.45"),helper(Lexer::new("-123.45").read()));
+    }
+   
+
+  
 
     #[test]
     fn test_identifier()  {
-        let value = Lexer::new("-").read();
-        // let output = SExp::Symbol(String::from("-"));
-        assert_eq!(format!("Symbol -"), helper2(value));
+        
         let value2 = Lexer::new("a").read();
-         assert_eq!(format!("Symbol a"), helper2(value2));
+         assert_eq!(format!("Symbol a"), helper(value2));
+           let value = Lexer::new("-\n").read();
+         assert_eq!(format!("Symbol -"), helper(value));
     }
     #[test]
      fn test_bool()  {
-        assert_eq!(format!("bool #t"), helper2(Lexer::new("#t").read()) );
-        assert_eq!(format!("bool #f"), helper2(Lexer::new("#f").read()) );
+        assert_eq!(format!("bool #t"), helper(Lexer::new("#t").read()) );
+        assert_eq!(format!("bool #f"), helper(Lexer::new("#f").read()) );
     }
 }
