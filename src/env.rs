@@ -1,46 +1,47 @@
 // pub mod parser;
-use crate::parser::AstNode;
+use crate::parser::LispValue;
+use std::collections::HashMap;
 
-pub struct env{
-   map: Vec<Hashmap<String,AstNode>>
+#[derive(Debug)]
+pub struct Env {
+    map: Vec<HashMap<String, LispValue>>,
 }
 
-impl env {
-    pub fn new() -> Self {
-        Self {
-            map: vec![Hashmap::new()]
-        }
-    }
-  
-    pub fn set(&mut self,name:String,value:AstNode)  {
-        let map = Hashmap::new();
-        map.insert(name,value);
-        self.env.insert(0,map)
-    }
+// impl Env {
+//     pub fn new() -> Self {
+//         Self {
+//             map: vec![Hashmap::new()]
+//         }
+//     }
 
-    pub fn set_global(&mut self,name:String,valeu:AstNode)  {
-        self.env.push(name,AstNode)
-    }
+//     pub fn set(&mut self,name:String,value:AstNode)  {
+//         let map = Hashmap::new();
+//         map.insert(name,value);
+//         self.env.insert(0,map)
+//     }
 
-    pub fn get(&self,key:String) ->Option<AstNode>{
-        unimplemented!();
-    }
-}
+//     pub fn set_global(&mut self,name:String,valeu:AstNode)  {
+//         self.env.push(name,AstNode)
+//     }
 
+//     pub fn get(&self,key:String) ->Option<AstNode>{
+//         unimplemented!();
+//     }
+// }
 
-pub fn add(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
-    number.iter().fold(AstNode::Number(0) |a ,b| {
-        match(a ,b) {
-            (AstNode::Number(r1),AstNode::Number(r2))  => Ok(AstNode::Number(r1+r2)),
-            (_,_) => Err(AstErr::Msg("parser Error".to_string()))
-        }
-    })
-}
+// pub fn add(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
+//     number.iter().fold(AstNode::Number(0) |a ,b| {
+//         match(a ,b) {
+//             (AstNode::Number(r1),AstNode::Number(r2))  => Ok(AstNode::Number(r1+r2)),
+//             (_,_) => Err(AstErr::Msg("parser Error".to_string()))
+//         }
+//     })
+// }
 
-pub fn sub(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
-    unimplemented!();
-}
+// pub fn sub(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
+//     unimplemented!();
+// }
 
-pub fn mul(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
-    unimplemented!();
-}
+// pub fn mul(number:&[AstNode]) -> Result<AstNode,parser::AstErr> {
+//     unimplemented!();
+// }

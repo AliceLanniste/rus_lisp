@@ -1,6 +1,8 @@
-
 // use crate::lexer::{Lexer, SExp};
 // use std::fmt;
+
+//TODO
+//根据lexer建立AST
 
 // #[derive(Clone)]
 // pub enum AstNode {
@@ -11,25 +13,24 @@
 //     Func(SCallbe)
 // }
 
-
 // impl fmt::Display for AstNode {
-   
+
 //     fn fmt(&self,f:&mut fmt::Formatter<'_>) -> fmt::Result {
 //         let des = match *self {
 //             AstNode::Number(n) => n.to_string(),
-//             AstNode::Bool(b) => if b { 
+//             AstNode::Bool(b) => if b {
 //                "#t".to_string()
 //                 } else {
 //                     "#f".to_string()
 //                 },
-//             AstNode::Symbol(ref s) =>  format!("{}", s), 
+//             AstNode::Symbol(ref s) =>  format!("{}", s),
 //             AstNode::List(ref list) => {
 //                 let xs: Vec<String> = list
 //                   .iter()
 //                   .map(|x| x.to_string())
 //                   .collect();
 //             format!("({})", xs.join(" . "))
-          
+
 //             },
 //             AstNode::Func(ref _function) =>  format!("<callable >"),
 //         };
@@ -45,7 +46,6 @@
 //    Msg(String),
 // }
 
-
 // #[derive(Debug)]
 // pub struct Parser<'a> {
 //     lexer: Lexer<'a>
@@ -58,14 +58,12 @@
 //         }
 //     }
 
-   
 //     pub fn parse(&mut self) -> Option<AstNode> {
 //         match self.lexer.next() {
 //             Some(expr) => self.get_expr2(Some(expr)),
 //             None => None,
 //         }
 //     }
-
 
 //     fn get_list(&mut self)  -> Vec<AstNode>{
 //         let mut list : Vec<AstNode> = Vec::new();
@@ -78,10 +76,9 @@
 //                      list.push(exp);
 //                     }
 //                 },
-                
+
 //             }
 //         }
-
 
 //     }
 
@@ -93,17 +90,56 @@
 //                                     } else {
 //                                         return Some(AstNode::Bool(true));
 //                                     },
-//             Some(SExp::Symbol(s)) => Some(AstNode::Symbol(s)),       
+//             Some(SExp::Symbol(s)) => Some(AstNode::Symbol(s)),
 //             Some(SExp::LParen) => {
 //                      let list = self.get_list();
 //                      return Some(AstNode::List(list)); },
-                     
+
 //             Some(SExp::RParen) => {panic!("unexpected char '(' ");}
 //             _ =>None,
 //         }
-        
+
 //     }
 
-    
-
 // }
+use crate::env::Env;
+use std::rc::Rc;
+
+#[derive(Debug)]
+pub enum LispValue {
+    Nil,
+    Bool(bool),
+    Int(i64),
+    Float(f64),
+    // Str(String),
+    Sym(String),
+    List(Rc<Vec<LispValue>>, Rc<LispValue>),
+    Func(fn(LispArgs) -> LispRet, Rc<LispValue>),
+    LispFunc {
+        eval: fn(ast: LispValue, env: Env) -> LispRet,
+        ast: Rc<LispValue>,
+        env: Env,
+        params: Rc<LispValue>,
+        is_macro: bool,
+        meta: Rc<LispValue>,
+    },
+}
+
+#[derive(Debug)]
+pub enum LispErr {
+    ErrString(String),
+    ErrLispValue(LispValue),
+}
+
+pub type LispArgs = Vec<LispValue>;
+pub type LispRet = Result<LispValue, LispErr>;
+
+macro_rules! list {
+    ($seq:expr) => {{
+      List(Rc::new($seq),Rc::new(Nil))
+    }};
+    [$($args:expr),*] => {{
+      let v: Vec<MalVal> = vec![$($args),*];
+      List(Rc::new(v),Rc::new(Nil))
+    }}
+  }
