@@ -102,9 +102,9 @@
 //     }
 
 // }
+use self::LispErr::{ErrLispValue, ErrString};
 use crate::env::Env;
 use std::rc::Rc;
-
 #[derive(Debug)]
 pub enum LispValue {
     Nil,
@@ -114,6 +114,7 @@ pub enum LispValue {
     // Str(String),
     Sym(String),
     List(Rc<Vec<LispValue>>, Rc<LispValue>),
+    Vector(Rc<Vec<LispValue>>, Rc<LispValue>),
     Func(fn(LispArgs) -> LispRet, Rc<LispValue>),
     LispFunc {
         eval: fn(ast: LispValue, env: Env) -> LispRet,
@@ -143,3 +144,6 @@ macro_rules! list {
       List(Rc::new(v),Rc::new(Nil))
     }}
   }
+pub fn error(s: &str) -> LispRet {
+    Err(ErrString(s.to_string()))
+}
