@@ -1,6 +1,6 @@
 use crate::parser::LispValue::{Bool, Float, Int, List, Nil, Sym};
-use crate::parser::{error, LispErr, LispRet, LispValue};
-use std::fmt;
+use crate::parser::{error, LispRet, LispValue};
+
 use std::str::Chars;
 
 //#[derive(Debug)]
@@ -10,6 +10,11 @@ use std::str::Chars;
 //    beginIndex: usize,
 //    endIndex: usize,
 //}
+
+fn tokenize(s: &str) -> LispRet {
+    let mut lexer = Lexer::new(s);
+    lexer.read()
+}
 
 #[derive(Debug)]
 pub struct Lexer<'a> {
@@ -35,7 +40,7 @@ impl<'a> Lexer<'a> {
         self.nth(0)
     }
 
-    pub fn peek_char(&self) -> char {
+    fn peek_char(&self) -> char {
         self.nth(1)
     }
 
@@ -45,9 +50,9 @@ impl<'a> Lexer<'a> {
         Some(c)
     }
 
-    pub fn is_eof(&self) -> bool {
-        self.chars.as_str().is_empty()
-    }
+    // pub fn is_eof(&self) -> bool {
+    //     self.chars.as_str().is_empty()
+    // }
 
     fn nth(&self, offset: usize) -> char {
         self.chars().nth(offset).unwrap()
@@ -73,11 +78,11 @@ impl<'a> Lexer<'a> {
             Some(c) if is_digit(c) || c == '-' && is_digit(self.current_char()) => {
                 self.lex_number()
             }
-            Some(c) if is_valid_for_identifier(c) => self.lex_symbol(),
+            Some(c) if is_first_for_identifier(c) => self.lex_symbol(),
             Some(';') => self.skip_comment(),
             Some(c) if is_whitespace(c) => self.skip_whitespace(),
             Some('(') => self.lex_seq(')'),
-            //报错
+            // //报错
             Some(')') => error("unexpected )"),
             _ => unreachable!(),
         }
@@ -85,7 +90,7 @@ impl<'a> Lexer<'a> {
 
     fn lex_number(&mut self) -> LispRet {
         debug_assert!(self.prev() >= '0' && self.prev() <= '9' || self.prev() == '-');
-        let start = self.col;
+        let _start = self.col;
         let mut value = self.prev().to_string();
         let mut seed = false;
         loop {
@@ -111,8 +116,8 @@ impl<'a> Lexer<'a> {
     }
 
     fn lex_symbol(&mut self) -> LispRet {
-        let start = self.col;
-        let line = self.line;
+        let _start = self.col;
+        let _line = self.line;
 
         let mut value: String = self.prev().to_string();
         loop {
@@ -159,7 +164,8 @@ impl<'a> Lexer<'a> {
     }
 
     //    "aab"以及注意转义字符
-    fn lex_string(&mut self) -> Token {
+
+    fn lex_string(&mut self) -> LispRet {
         unimplemented!();
     }
 
@@ -172,7 +178,7 @@ impl<'a> Lexer<'a> {
             }
             seq.push(self.read()?);
         }
-        Ok(list!(seq))
+        Ok(List(std::rc::Rc::new(seq), std::rc::Rc::new(Nil)))
     }
 }
 
@@ -183,9 +189,16 @@ fn is_whitespace(c: char) -> bool {
     }
 }
 
+fn is_first_for_identifier(c: char) -> bool {
+    match c {
+        '_' | '!' | '$' | '%' | 'a'..='z' | 'A'..='Z' | '+' | '-' | '*' | '/' => true,
+        _ => false,
+    }
+}
+
 fn is_valid_for_identifier(c: char) -> bool {
     match c {
-        '!' | '$' | '%' | 'a'..='z' | 'A'..='Z' | '+' | '-' | '*' | '/' => true,
+        '0'..='9' | '_' | '!' | '$' | '%' | 'a'..='z' | 'A'..='Z' | '+' | '-' | '*' | '/' => true,
         _ => false,
     }
 }

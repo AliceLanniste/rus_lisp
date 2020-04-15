@@ -3,9 +3,7 @@ use crate::parser::LispValue;
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct Env {
-    map: Vec<HashMap<String, LispValue>>,
-}
+pub struct Env {}
 
 // impl Env {
 //     pub fn new() -> Self {

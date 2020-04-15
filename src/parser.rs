@@ -104,7 +104,10 @@
 // }
 use self::LispErr::{ErrLispValue, ErrString};
 use crate::env::Env;
+use std::fmt;
+use std::fmt::{Error, Formatter};
 use std::rc::Rc;
+
 #[derive(Debug)]
 pub enum LispValue {
     Nil,
@@ -135,15 +138,32 @@ pub enum LispErr {
 pub type LispArgs = Vec<LispValue>;
 pub type LispRet = Result<LispValue, LispErr>;
 
-macro_rules! list {
-    ($seq:expr) => {{
-      List(Rc::new($seq),Rc::new(Nil))
-    }};
-    [$($args:expr),*] => {{
-      let v: Vec<MalVal> = vec![$($args),*];
-      List(Rc::new(v),Rc::new(Nil))
-    }}
-  }
 pub fn error(s: &str) -> LispRet {
     Err(ErrString(s.to_string()))
+}
+
+impl fmt::Display for LispValue {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        let des = match self {
+            LispValue::Nil => "nil".to_string(),
+            LispValue::Bool(true) => "true".to_string(),
+            LispValue::Bool(false) => "false".to_string(),
+            LispValue::Sym(s) => s.clone(),
+            LispValue::Int(i) => format!("{}", i),
+            LispValue::Float(f) => format!("{}", f),
+            LispValue::List(l, _) => unimplemented!(),
+            LispValue::Vector(v, _) => unimplemented!(),
+            LispValue::Func(f, _) => unimplemented!(),
+            LispValue::LispFunc {
+                ast: a, params: p, ..
+            } => unimplemented!(),
+        };
+
+        write!(f, "{}", des)
+    }
+    // add code here
+}
+
+fn print_seq(vecL: Vec<LispValue>) -> String {
+    unimplemented!();
 }
