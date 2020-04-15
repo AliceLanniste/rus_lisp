@@ -1,16 +1,10 @@
-// pub mod env;
-// pub mod parser;
-
 use crate::env::env;
-use crate::parser::{AstNode,AstErr};
+use crate::parser::{LispValue,LispRet};
 
-// use crate::env::env;
-// use crate::parser::{AstNode,AstErr>;
-
-pub fn eval(exp:AstNode,enviroment:&env) -> Result<AstNode,AstErr> {
+pub fn eval(exp:LispValue,enviroment:&env) -> LispRet {
         match exp {
-           AstNode::Number(i) || AstNode::Bool(include_bytes!("")) => Ok(exp.clone()),
-           AstNode::list(list) => eval_list(list,enviroment),
+        //    LispValue::Number(i) || LispValue::Bool(include_bytes!("")) => Ok(exp.clone()),
+        //    LispValue::list(list) => eval_list(list,enviroment),
            
         }
     }
@@ -24,9 +18,9 @@ fn eval_list(arg: Type) -> RetType {
 }
 
 
-fn make_env() -> env {
-    let enviroment =env::new();
-    enviroment.set_global("+".to_stirng(),env::add);
+// fn make_env() -> env {
+//     let enviroment =env::new();
+//     enviroment.set_global("+".to_stirng(),env::add);
 
-    enviroment
-}
+//     enviroment
+// }
