@@ -103,6 +103,7 @@
 
 // }
 use self::LispErr::{ErrLispValue, ErrString};
+use self::LispValue::{Bool, Float, Func, Int, LispFunc, List, Nil, Sym, Vector};
 use crate::env::Env;
 use std::fmt;
 use std::fmt::{Error, Formatter};
@@ -142,19 +143,34 @@ pub fn error(s: &str) -> LispRet {
     Err(ErrString(s.to_string()))
 }
 
+impl PartialEq for LispValue {
+    fn eq(&self, other: &LispValue) -> bool {
+        match (self, other) {
+            (Nil, Nil) => true,
+            (Bool(a), Bool(b)) => a == b,
+            (Sym(a), Sym(b)) => a == b,
+            (Int(a), Int(b)) => a == b,
+            (Float(a), Float(b)) => a == b,
+            (List(a, _), List(b, _)) | (Vector(a, _), Vector(b, _)) => a == b,
+            (LispFunc { .. }, LispFunc { .. }) => false,
+            _ => false,
+        }
+    }
+}
+
 impl fmt::Display for LispValue {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         let des = match self {
-            LispValue::Nil => "nil".to_string(),
-            LispValue::Bool(true) => "true".to_string(),
-            LispValue::Bool(false) => "false".to_string(),
-            LispValue::Sym(s) => s.clone(),
-            LispValue::Int(i) => format!("{}", i),
-            LispValue::Float(f) => format!("{}", f),
-            LispValue::List(l, _) => unimplemented!(),
-            LispValue::Vector(v, _) => unimplemented!(),
-            LispValue::Func(f, _) => unimplemented!(),
-            LispValue::LispFunc {
+            Nil => "nil".to_string(),
+            Bool(true) => "true".to_string(),
+            Bool(false) => "false".to_string(),
+            Sym(s) => s.clone(),
+            Int(i) => format!("{}", i),
+            Float(f) => format!("{}", f),
+            List(l, _) => unimplemented!(),
+            Vector(v, _) => unimplemented!(),
+            Func(f, _) => unimplemented!(),
+            LispFunc {
                 ast: a, params: p, ..
             } => unimplemented!(),
         };
@@ -164,6 +180,6 @@ impl fmt::Display for LispValue {
     // add code here
 }
 
-fn print_seq(vecL: Vec<LispValue>) -> String {
-    unimplemented!();
-}
+// fn print_seq(vecL: Vec<LispValue>) -> String {
+//     unimplemented!();
+// }
