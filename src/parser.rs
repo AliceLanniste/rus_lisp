@@ -2,7 +2,9 @@
 // use std::fmt;
 
 //TODO
-//根据lexer建立AST
+//把Parser display写
+//写env
+//lexer添加Vector
 
 // #[derive(Clone)]
 // pub enum AstNode {
@@ -167,9 +169,9 @@ impl fmt::Display for LispValue {
             Sym(s) => s.clone(),
             Int(i) => format!("{}", i),
             Float(f) => format!("{}", f),
-            List(l, _) => unimplemented!(),
-            Vector(v, _) => unimplemented!(),
-            Func(f, _) => unimplemented!(),
+            List(l, _) => print_seq(&**l,"(",")"," "),
+            Vector(v, _) => print_seq(&**v,"[","]"," "),
+            Func(f, _) => format!("#<Fn {:?}>",f),
             LispFunc {
                 ast: a, params: p, ..
             } => unimplemented!(),
@@ -180,6 +182,7 @@ impl fmt::Display for LispValue {
     // add code here
 }
 
-// fn print_seq(vecL: Vec<LispValue>) -> String {
-//     unimplemented!();
-// }
+ fn print_seq(args: &Vec<LispValue>,start:&str,end:&str,join:&str) -> String {
+     let strs :Vec<String>= args.iter().map(|x| format!("{}",x)).collect();
+     format!("{}{}{}", start, strs.join(join), end)
+ }

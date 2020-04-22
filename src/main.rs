@@ -37,10 +37,10 @@ fn main() {
 
 fn process_line(text: String) {
     let mut lexr = Lexer::new(text.as_str());
-    let value = lexr.read();
-    //   let v = helper(value);
+    let value = lexr.read().unwrap();
 
-    //   println!("well done {}",v);
+
+       println!("well done {}",value);
 }
 
 // fn process_line2(text: String)  {

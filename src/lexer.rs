@@ -1,4 +1,4 @@
-use crate::parser::LispValue::{Bool, Float, Int, List, Nil, Sym};
+use crate::parser::LispValue::{Bool, Float, Int, List, Nil, Sym, Vector};
 use crate::parser::{error, LispRet, LispValue};
 
 use std::str::Chars;
@@ -70,8 +70,7 @@ impl<'a> Lexer<'a> {
         let first_char = self.next_char();
         match first_char {
             Some('n') if self.current_char() == 'i' && self.peek_char() == 'l' => {
-                self.col += 2;
-                self.chars = self.input[self.col..].chars();
+                self.col +=2;    self.chars = self.input[self.col..].chars();
                 return Ok(Nil);
             }
             Some('#') => self.lex_bool(),
@@ -82,9 +81,11 @@ impl<'a> Lexer<'a> {
             Some(';') => self.skip_comment(),
             Some(c) if is_whitespace(c) => self.skip_whitespace(),
             Some('(') => self.lex_seq(')'),
+            Some('[') => self.lex_seq(']'),
             // //报错
             Some(')') => error("unexpected )"),
-            _ => unreachable!(),
+            Some(']') => error("unexpected ]"),
+            _ => {println!("{}",self.prev()); Ok(Nil)},
         }
     }
 
@@ -172,13 +173,22 @@ impl<'a> Lexer<'a> {
     fn lex_seq(&mut self, end: char) -> LispRet {
         let mut seq: Vec<LispValue> = vec![];
         loop {
-            let token = self.current_char();
-            if token == end {
-                break;
+
+            match self.prev() {
+                c if c == end  => break,
+                t=> {
+
+                    let token =self.read().unwrap();
+                    seq.push(token);
+                    }
             }
-            seq.push(self.read()?);
         }
-        Ok(List(std::rc::Rc::new(seq), std::rc::Rc::new(Nil)))
+        match end {
+            ')' =>Ok(List(std::rc::Rc::new(seq), std::rc::Rc::new(Nil))),
+            ']' =>Ok(Vector(std::rc::Rc::new(seq), std::rc::Rc::new(Nil))),
+            _ => error("read_seq unknown end value"),
+        }
+
     }
 }
 
@@ -210,4 +220,11 @@ fn is_digit(c: char) -> bool {
 #[cfg(test)]
 pub mod tests {
     use super::*;
+
+
+    #[test]
+    fn test_list() {
+        let output =  Lexer::new("(1)").read().unwrap();
+        assert_eq!("(1)",format!("{}",output));
+    }
 }
