@@ -85,7 +85,7 @@ impl<'a> Lexer<'a> {
             // //报错
             Some(')') => error("unexpected )"),
             Some(']') => error("unexpected ]"),
-            _ => {println!("{}",self.prev()); Ok(Nil)},
+            _ => error("unexpected error"),
         }
     }
 
@@ -180,13 +180,11 @@ impl<'a> Lexer<'a> {
 
             match self.current_char() {
                c if c == end  => break,
-                _t=> {
-                    let token =self.read().unwrap();
-                    seq.push(token);
-                    }
+                _t=> seq.push(self.read()?),
                 
             }
         }
+        println!("seq length {}",seq.len());
         match end {
             ')' =>Ok(List(std::rc::Rc::new(seq), std::rc::Rc::new(Nil))),
             ']' =>Ok(Vector(std::rc::Rc::new(seq), std::rc::Rc::new(Nil))),
@@ -198,7 +196,7 @@ impl<'a> Lexer<'a> {
 
 fn is_whitespace(c: char) -> bool {
     match c {
-        '\u{000C}' | '\t' | '\n' | '\r' => true,
+        '\u{000C}' | '\t' | '\n' | '\r' |' ' => true,
         _ => false,
     }
 }
