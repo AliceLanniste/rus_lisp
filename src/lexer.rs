@@ -95,18 +95,21 @@ impl<'a> Lexer<'a> {
         let mut value = self.prev().to_string();
         let mut seed = false;
         loop {
-            match self.next_char() {
-                Some(c) if is_digit(c) => {
+            match self.current_char() {
+                c if is_digit(c) => {
                     value.push(c);
+                    self.next_char();
                     self.col += 1;
                 }
-                Some(c) if c == '.' && is_digit(self.current_char()) => {
+                c if c == '.' && is_digit(self.peek_char()) => {
                     value.push(c);
+                    self.next_char();
                     self.col += 1;
                     seed = true;
                 }
                 _ => break,
             }
+
         }
 
         return if seed {
@@ -143,6 +146,7 @@ impl<'a> Lexer<'a> {
 
             _ => unreachable!(),
         }
+        
     }
 
     fn skip_comment(&mut self) -> LispRet {
@@ -174,13 +178,13 @@ impl<'a> Lexer<'a> {
         let mut seq: Vec<LispValue> = vec![];
         loop {
 
-            match self.prev() {
-                c if c == end  => break,
-                t=> {
-
+            match self.current_char() {
+               c if c == end  => break,
+                _t=> {
                     let token =self.read().unwrap();
                     seq.push(token);
                     }
+                
             }
         }
         match end {
